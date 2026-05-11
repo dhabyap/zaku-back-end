@@ -1,0 +1,439 @@
+openapi: 3.0.3
+info:
+  title: 'DOMPET Backend API API Documentation'
+  description: 'Dokumentasi endpoint API untuk backend DOMPET/Zaku.'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://127.0.0.1:8000'
+tags:
+  -
+    name: Authentication
+    description: ''
+components:
+  securitySchemes:
+    default:
+      type: http
+      scheme: bearer
+      description: 'Dapatkan token dari endpoint <code>POST /api/auth/login</code>, lalu kirim sebagai Bearer token.'
+security:
+  -
+    default: []
+paths:
+  /api/auth/register:
+    post:
+      summary: 'Register user'
+      operationId: registerUser
+      description: 'Membuat user baru, wallet default, kode verifikasi email, dan JWT token.'
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: success
+                  message: 'User registered successfully'
+                  data:
+                    user:
+                      id: 1
+                      full_name: 'John Doe'
+                      email: user@example.com
+                      phone_number: '08123456789'
+                      is_verified: false
+                      last_login_at: null
+                      wallet:
+                        id: 1
+                        user_id: 1
+                        balance: '0.00'
+                        status: active
+                    token: jwt_token_here
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 'User registered successfully'
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          full_name:
+                            type: string
+                            example: 'John Doe'
+                          email:
+                            type: string
+                            example: user@example.com
+                          phone_number:
+                            type: string
+                            example: '08123456789'
+                          is_verified:
+                            type: boolean
+                            example: false
+                          last_login_at:
+                            type: string
+                            example: null
+                            nullable: true
+                          wallet:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                                example: 1
+                              user_id:
+                                type: integer
+                                example: 1
+                              balance:
+                                type: string
+                                example: '0.00'
+                              status:
+                                type: string
+                                example: active
+                      token:
+                        type: string
+                        example: jwt_token_here
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Email user.'
+                  example: user@example.com
+                password:
+                  type: string
+                  description: 'Minimal 8 karakter.'
+                  example: password123
+                full_name:
+                  type: string
+                  description: 'Nama lengkap user.'
+                  example: 'John Doe'
+                phone_number:
+                  type: string
+                  description: 'Nomor telepon opsional.'
+                  example: '08123456789'
+                  nullable: true
+              required:
+                - email
+                - password
+                - full_name
+      security: []
+  /api/auth/login:
+    post:
+      summary: 'Login user'
+      operationId: loginUser
+      description: 'Mengautentikasi user yang email-nya sudah diverifikasi dan mengembalikan JWT token.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: success
+                  message: 'Login successful'
+                  data:
+                    token: jwt_token_here
+                    user:
+                      id: 1
+                      full_name: 'John Doe'
+                      email: user@example.com
+                      is_verified: true
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 'Login successful'
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: jwt_token_here
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          full_name:
+                            type: string
+                            example: 'John Doe'
+                          email:
+                            type: string
+                            example: user@example.com
+                          is_verified:
+                            type: boolean
+                            example: true
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: error
+                  message: 'Invalid credentials.'
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: 'Invalid credentials.'
+        403:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: error
+                  message: 'Email address is not verified.'
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: 'Email address is not verified.'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Email user.'
+                  example: user@example.com
+                password:
+                  type: string
+                  description: 'Password user.'
+                  example: password123
+              required:
+                - email
+                - password
+      security: []
+  /api/auth/verify-email:
+    post:
+      summary: 'Verify email'
+      operationId: verifyEmail
+      description: 'Memvalidasi kode verifikasi dan menandai email user sebagai terverifikasi.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: success
+                  message: 'Email verified successfully'
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 'Email verified successfully'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: error
+                  message: 'Verification code has expired.'
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: 'Verification code has expired.'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: 'ID user yang akan diverifikasi.'
+                  example: 1
+                code:
+                  type: string
+                  description: 'Kode verifikasi 6 digit dari email/log.'
+                  example: '123456'
+              required:
+                - user_id
+                - code
+      security: []
+  /api/auth/resend-verification:
+    post:
+      summary: 'Resend verification code'
+      operationId: resendVerificationCode
+      description: 'Mengirim ulang kode verifikasi untuk user yang belum terverifikasi.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: success
+                  message: 'Verification code sent to your email'
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 'Verification code sent to your email'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Email user.'
+                  example: user@example.com
+              required:
+                - email
+      security: []
+  /api/auth/forgot-password:
+    post:
+      summary: 'Forgot password'
+      operationId: forgotPassword
+      description: 'Membuat token reset password dan mengirimkannya ke email user.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: success
+                  message: 'Password reset link sent to your email'
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 'Password reset link sent to your email'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Email user.'
+                  example: user@example.com
+              required:
+                - email
+      security: []
+  /api/auth/change-password:
+    post:
+      summary: 'Change password'
+      operationId: changePassword
+      description: 'Mengubah password user yang sedang login. Endpoint ini membutuhkan JWT Bearer token.'
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: success
+                  message: 'Password changed successfully'
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: 'Password changed successfully'
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: error
+                  message: 'Authorization token is required.'
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: 'Authorization token is required.'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                old_password:
+                  type: string
+                  description: 'Password lama.'
+                  example: password123
+                new_password:
+                  type: string
+                  description: 'Password baru minimal 8 karakter.'
+                  example: password456
+                new_password_confirmation:
+                  type: string
+                  description: 'Konfirmasi password baru.'
+                  example: password456
+              required:
+                - old_password
+                - new_password
+                - new_password_confirmation

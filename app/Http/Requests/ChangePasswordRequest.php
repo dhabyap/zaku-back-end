@@ -25,4 +25,22 @@ class ChangePasswordRequest extends ApiFormRequest
             'new_password.different' => 'The new password must be different from the old password.',
         ];
     }
+
+    public function bodyParameters(): array
+    {
+        return [
+            'old_password' => [
+                'description' => 'Password lama user.',
+                'example' => 'password123',
+            ],
+            'new_password' => [
+                'description' => 'Password baru minimal 8 karakter.',
+                'example' => 'password456',
+            ],
+            'new_password_confirmation' => [
+                'description' => 'Konfirmasi password baru.',
+                'example' => 'password456',
+            ],
+        ];
+    }
 }

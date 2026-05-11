@@ -26,4 +26,26 @@ class StoreUserRequest extends ApiFormRequest
             'password.min' => 'The password must be at least 8 characters.',
         ];
     }
+
+    public function bodyParameters(): array
+    {
+        return [
+            'email' => [
+                'description' => 'Email user yang unik.',
+                'example' => 'user@example.com',
+            ],
+            'password' => [
+                'description' => 'Password minimal 8 karakter.',
+                'example' => 'password123',
+            ],
+            'full_name' => [
+                'description' => 'Nama lengkap user.',
+                'example' => 'John Doe',
+            ],
+            'phone_number' => [
+                'description' => 'Nomor telepon opsional.',
+                'example' => '08123456789',
+            ],
+        ];
+    }
 }
