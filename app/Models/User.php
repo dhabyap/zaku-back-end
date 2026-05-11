@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -19,9 +21,13 @@ class User extends Authenticatable implements JWTSubject
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
+        'full_name',
         'email',
         'password',
+        'phone_number',
+        'is_verified',
+        'verification_code',
+        'last_login_at',
     ];
 
     /**
@@ -42,7 +48,29 @@ class User extends Authenticatable implements JWTSubject
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'is_verified' => 'boolean',
+        'last_login_at' => 'datetime',
     ];
+
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
+    public function verificationCodes(): HasMany
+    {
+        return $this->hasMany(VerificationCode::class);
+    }
+
+    public function isVerified(): bool
+    {
+        return (bool) $this->is_verified;
+    }
+
+    public function hasWallet(): bool
+    {
+        return $this->wallet()->exists();
+    }
 
     public function getJWTIdentifier()
     {
