@@ -16,4 +16,18 @@ class VerifyEmailRequest extends ApiFormRequest
             'code' => ['required', 'string', 'size:6'],
         ];
     }
+
+    public function bodyParameters(): array
+    {
+        return [
+            'user_id' => [
+                'description' => 'ID user yang akan diverifikasi.',
+                'example' => 1,
+            ],
+            'code' => [
+                'description' => 'Kode verifikasi 6 digit dari email atau log.',
+                'example' => '123456',
+            ],
+        ];
+    }
 }

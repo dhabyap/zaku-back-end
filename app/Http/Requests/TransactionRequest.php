@@ -22,4 +22,34 @@ class TransactionRequest extends ApiFormRequest
             'reference_id' => ['nullable', 'string', 'max:255'],
         ];
     }
+
+    public function bodyParameters(): array
+    {
+        return [
+            'type' => [
+                'description' => 'Jenis transaksi.',
+                'example' => 'credit',
+            ],
+            'amount' => [
+                'description' => 'Nominal transaksi.',
+                'example' => 100000,
+            ],
+            'description' => [
+                'description' => 'Deskripsi transaksi.',
+                'example' => 'Top up wallet',
+            ],
+            'status' => [
+                'description' => 'Status transaksi.',
+                'example' => 'pending',
+            ],
+            'transaction_date' => [
+                'description' => 'Tanggal transaksi.',
+                'example' => '2026-05-11 10:00:00',
+            ],
+            'reference_id' => [
+                'description' => 'ID referensi eksternal opsional.',
+                'example' => 'TRX-20260511-0001',
+            ],
+        ];
+    }
 }

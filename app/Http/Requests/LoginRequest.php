@@ -16,4 +16,18 @@ class LoginRequest extends ApiFormRequest
             'password' => ['required', 'string'],
         ];
     }
+
+    public function bodyParameters(): array
+    {
+        return [
+            'email' => [
+                'description' => 'Email user.',
+                'example' => 'user@example.com',
+            ],
+            'password' => [
+                'description' => 'Password user.',
+                'example' => 'password123',
+            ],
+        ];
+    }
 }

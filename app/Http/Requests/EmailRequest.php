@@ -15,4 +15,14 @@ class EmailRequest extends ApiFormRequest
             'email' => ['required', 'email'],
         ];
     }
+
+    public function bodyParameters(): array
+    {
+        return [
+            'email' => [
+                'description' => 'Email user.',
+                'example' => 'user@example.com',
+            ],
+        ];
+    }
 }

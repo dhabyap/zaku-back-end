@@ -1,0 +1,475 @@
+name: Authentication
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/auth/register
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Register user'
+      description: 'Membuat user baru, wallet default, kode verifikasi email, dan JWT token.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email user.'
+        required: true
+        example: user@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Minimal 8 karakter.'
+        required: true
+        example: password123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      full_name:
+        custom: []
+        name: full_name
+        description: 'Nama lengkap user.'
+        required: true
+        example: 'John Doe'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      phone_number:
+        custom: []
+        name: phone_number
+        description: 'Nomor telepon opsional.'
+        required: false
+        example: '08123456789'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      email: user@example.com
+      password: password123
+      full_name: 'John Doe'
+      phone_number: '08123456789'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "status": "success",
+            "message": "User registered successfully",
+            "data": {
+              "user": {
+                "id": 1,
+                "full_name": "John Doe",
+                "email": "user@example.com",
+                "phone_number": "08123456789",
+                "is_verified": false,
+                "last_login_at": null,
+                "wallet": {
+                  "id": 1,
+                  "user_id": 1,
+                  "balance": "0.00",
+                  "status": "active"
+                }
+              },
+              "token": "jwt_token_here"
+            }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/auth/login
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Login user'
+      description: 'Mengautentikasi user yang email-nya sudah diverifikasi dan mengembalikan JWT token.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email user.'
+        required: true
+        example: user@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Password user.'
+        required: true
+        example: password123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: user@example.com
+      password: password123
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": "success",
+            "message": "Login successful",
+            "data": {
+              "token": "jwt_token_here",
+              "user": {
+                "id": 1,
+                "full_name": "John Doe",
+                "email": "user@example.com",
+                "is_verified": true
+              }
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: |-
+          {
+            "status": "error",
+            "message": "Invalid credentials."
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "status": "error",
+            "message": "Email address is not verified."
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/auth/verify-email
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Verify email'
+      description: 'Memvalidasi kode verifikasi dan menandai email user sebagai terverifikasi.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      user_id:
+        custom: []
+        name: user_id
+        description: 'ID user yang akan diverifikasi.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      code:
+        custom: []
+        name: code
+        description: 'Kode verifikasi 6 digit dari email/log.'
+        required: true
+        example: '123456'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      user_id: 1
+      code: '123456'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": "success",
+            "message": "Email verified successfully"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "status": "error",
+            "message": "Verification code has expired."
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/auth/resend-verification
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Resend verification code'
+      description: 'Mengirim ulang kode verifikasi untuk user yang belum terverifikasi.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email user.'
+        required: true
+        example: user@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: user@example.com
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": "success",
+            "message": "Verification code sent to your email"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/auth/forgot-password
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Forgot password'
+      description: 'Membuat token reset password dan mengirimkannya ke email user.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email user.'
+        required: true
+        example: user@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: user@example.com
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": "success",
+            "message": "Password reset link sent to your email"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/auth/change-password
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Change password'
+      description: 'Mengubah password user yang sedang login. Endpoint ini membutuhkan JWT Bearer token.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_JWT_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      old_password:
+        custom: []
+        name: old_password
+        description: 'Password lama.'
+        required: true
+        example: password123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      new_password:
+        custom: []
+        name: new_password
+        description: 'Password baru minimal 8 karakter.'
+        required: true
+        example: password456
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      new_password_confirmation:
+        custom: []
+        name: new_password_confirmation
+        description: 'Konfirmasi password baru.'
+        required: true
+        example: password456
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      old_password: password123
+      new_password: password456
+      new_password_confirmation: password456
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": "success",
+            "message": "Password changed successfully"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: |-
+          {
+            "status": "error",
+            "message": "Authorization token is required."
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
