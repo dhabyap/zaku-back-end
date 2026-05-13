@@ -10,6 +10,7 @@ trait ApiResponse
     {
         $response = [
             'success' => true,
+            'status' => 'success',
             'data' => $data,
             'message' => $message,
         ];
@@ -21,6 +22,7 @@ trait ApiResponse
     {
         $response = [
             'success' => false,
+            'status' => 'error',
             'data' => $errors === null ? null : ['errors' => $errors],
             'message' => $message,
         ];

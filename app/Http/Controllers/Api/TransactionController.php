@@ -17,13 +17,78 @@ class TransactionController extends Controller
 {
     use ApiResponse;
 
+    public function show(Request $request, int $id): JsonResponse
+    {
+        $transaction = $this->baseQuery($request)
+            ->with('category')
+            ->find($id);
+
+        if (! $transaction) {
+            return $this->notFoundResponse('Transaction not found.');
+        }
+
+        return $this->successResponse([
+            'id' => $transaction->id,
+            'type' => $transaction->type,
+            'amount' => (int) $transaction->amount,
+            'description' => $transaction->description,
+            'category' => $transaction->category?->name ?? 'LAINNYA',
+            'created_at' => $transaction->created_at?->toISOString(),
+        ], 'Detail transaksi berhasil diambil');
+    }
+
+    public function stats(Request $request): JsonResponse
+    {
+        $query = $this->baseQuery($request);
+
+        return $this->successResponse([
+            'total' => (clone $query)->count(),
+            'this_month' => (clone $query)
+                ->whereBetween('transaction_date', [now()->startOfMonth(), now()->endOfMonth()])
+                ->count(),
+            'biggest' => (int) (clone $query)->max('amount'),
+            'categories' => (int) (clone $query)
+                ->whereNotNull('category_id')
+                ->distinct('category_id')
+                ->count('category_id'),
+        ], 'Statistik transaksi berhasil diambil');
+    }
+
+    public function categories(Request $request): JsonResponse
+    {
+        $totalExpense = (int) $this->baseQuery($request)
+            ->where('type', Transaction::TYPE_EXPENSE)
+            ->sum('amount');
+
+        if ($totalExpense <= 0) {
+            return $this->successResponse([], 'Ringkasan kategori berhasil diambil');
+        }
+
+        $categories = $this->baseQuery($request)
+            ->with('category')
+            ->where('type', Transaction::TYPE_EXPENSE)
+            ->get()
+            ->groupBy(fn (Transaction $transaction) => $transaction->category?->name ?? 'LAINNYA')
+            ->map(function ($transactions, string $name) use ($totalExpense) {
+                $amount = (int) $transactions->sum('amount');
+
+                return [
+                    'name' => $name,
+                    'amount' => $amount,
+                    'pct' => (int) round(($amount / $totalExpense) * 100),
+                ];
+            })
+            ->sortByDesc('amount')
+            ->values()
+            ->all();
+
+        return $this->successResponse($categories, 'Ringkasan kategori berhasil diambil');
+    }
+
     public function index(Request $request): JsonResponse
     {
         $filter = strtoupper((string) $request->query('filter', 'SEMUA'));
-        $query = Transaction::query()
-            ->with('category')
-            ->whereHas('wallet', fn (Builder $query) => $query->where('user_id', $request->user()->id))
-            ->where('status', Transaction::STATUS_COMPLETED);
+        $query = $this->baseQuery($request)->with('category');
 
         if ($filter === 'PEMASUKAN') {
             $query->where('type', Transaction::TYPE_INCOME);
@@ -98,5 +163,12 @@ class TransactionController extends Controller
         }
 
         return 'Sip, udah dicatat! '.$transaction->category?->icon;
+    }
+
+    private function baseQuery(Request $request): Builder
+    {
+        return Transaction::query()
+            ->whereHas('wallet', fn (Builder $query) => $query->where('user_id', $request->user()->id))
+            ->where('status', Transaction::STATUS_COMPLETED);
     }
 }

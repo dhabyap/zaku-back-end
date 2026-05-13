@@ -122,6 +122,83 @@ class DompetApiTest extends TestCase
             ->assertJsonPath('data.parsed_data.type', 'expense');
     }
 
+    public function test_frontend_gap_transaction_and_wallet_endpoints(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'sender@example.com',
+        ]);
+        $recipient = User::factory()->create([
+            'email' => 'recipient@example.com',
+        ]);
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 1000000, 'status' => Wallet::STATUS_ACTIVE]);
+        Wallet::create(['user_id' => $recipient->id, 'balance' => 250000, 'status' => Wallet::STATUS_ACTIVE]);
+        $food = Category::where('name', 'MAKANAN')->firstOrFail();
+
+        $transaction = Transaction::create([
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 35000,
+            'description' => 'Beli makan siang',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        $headers = $this->authHeaders($user);
+
+        $this->getJson("/api/transactions/{$transaction->id}", $headers)
+            ->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.amount', 35000)
+            ->assertJsonPath('data.category', 'MAKANAN');
+
+        $this->getJson('/api/transactions/stats', $headers)
+            ->assertOk()
+            ->assertJsonPath('data.total', 1)
+            ->assertJsonPath('data.biggest', 35000)
+            ->assertJsonPath('data.categories', 1);
+
+        $this->getJson('/api/transactions/categories', $headers)
+            ->assertOk()
+            ->assertJsonPath('data.0.name', 'MAKANAN')
+            ->assertJsonPath('data.0.amount', 35000);
+
+        $this->getJson('/api/wallet/balance', $headers)
+            ->assertOk()
+            ->assertJsonPath('data.balance', 1000000)
+            ->assertJsonPath('data.total_expense', 35000);
+
+        $this->postJson('/api/wallet/topup', ['amount' => 100000], $headers)
+            ->assertOk()
+            ->assertJsonPath('data.balance', 1100000)
+            ->assertJsonPath('data.message', 'Top up berhasil.');
+
+        $this->postJson('/api/wallet/withdraw', [
+            'amount' => 200000,
+            'account_number' => '1234567890',
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('data.balance', 900000)
+            ->assertJsonPath('data.message', 'Penarikan berhasil diproses.');
+
+        $this->postJson('/api/wallet/send', [
+            'recipient_email' => 'recipient@example.com',
+            'amount' => 50000,
+            'note' => 'opsional',
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('data.balance', 850000)
+            ->assertJsonPath('data.message', 'Uang berhasil dikirim.');
+
+        $this->postJson('/api/wallet/withdraw', [
+            'amount' => 999999999,
+            'account_number' => '1234567890',
+        ], $headers)
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
+    }
+
     private function authHeaders(User $user): array
     {
         return [

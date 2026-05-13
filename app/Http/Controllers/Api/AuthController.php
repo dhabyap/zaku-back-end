@@ -246,8 +246,10 @@ class AuthController extends Controller
      */
     public function verifyEmail(VerifyEmailRequest $request): JsonResponse
     {
-        $verificationCode = VerificationCode::forUser((int) $request->input('user_id'))
-            ->where('code', $request->string('code')->toString())
+        $verificationCode = VerificationCode::where('code', $request->code)
+            ->whereHas('user', function ($query) use ($request) {
+                $query->where('email', $request->email);
+            })
             ->first();
 
         if (! $verificationCode) {
@@ -255,23 +257,34 @@ class AuthController extends Controller
         }
 
         if ($verificationCode->isUsed()) {
-            return $this->errorResponse('Verification code has already been used.', 422);
+            return $this->errorResponse(
+                'Verification code has already been used.',
+                422
+            );
         }
 
         if ($verificationCode->isExpired()) {
-            return $this->errorResponse('Verification code has expired.', 422);
+            return $this->errorResponse(
+                'Verification code has expired.',
+                422
+            );
         }
 
         DB::transaction(function () use ($verificationCode) {
+
             $verificationCode->user->forceFill([
                 'is_verified' => true,
                 'verification_code' => null,
             ])->save();
 
             $verificationCode->markAsUsed();
+
         });
 
-        return $this->successResponse(null, 'Email verified successfully');
+        return $this->successResponse(
+            null,
+            'Email verified successfully'
+        );
     }
 
     /**

@@ -12,7 +12,7 @@ class VerifyEmailRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'email' => ['required', 'email'],
             'code' => ['required', 'string', 'size:6'],
         ];
     }
@@ -20,9 +20,9 @@ class VerifyEmailRequest extends ApiFormRequest
     public function bodyParameters(): array
     {
         return [
-            'user_id' => [
-                'description' => 'ID user yang akan diverifikasi.',
-                'example' => 1,
+            'email' => [
+                'description' => 'Email user yang akan diverifikasi.',
+                'example' => 'user@example.com',
             ],
             'code' => [
                 'description' => 'Kode verifikasi 6 digit dari email atau log.',

@@ -290,17 +290,22 @@ paths:
             schema:
               type: object
               properties:
-                user_id:
-                  type: integer
-                  description: 'ID user yang akan diverifikasi.'
-                  example: 1
+                email:
+                  type: string
+                  description: 'Email user yang akan diverifikasi. Must be a valid email address.'
+                  example: user@example.com
                 code:
                   type: string
                   description: 'Kode verifikasi 6 digit dari email/log.'
                   example: '123456'
+                user_id:
+                  type: integer
+                  description: 'ID user yang akan diverifikasi.'
+                  example: 1
               required:
-                - user_id
+                - email
                 - code
+                - user_id
       security: []
   /api/auth/resend-verification:
     post:
@@ -655,6 +660,81 @@ paths:
       tags:
         - API
       security: []
+  /api/transactions/stats:
+    get:
+      summary: ''
+      operationId: getApiTransactionsStats
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Token not provided'
+                properties:
+                  message:
+                    type: string
+                    example: 'Token not provided'
+      tags:
+        - API
+      security: []
+  /api/transactions/categories:
+    get:
+      summary: ''
+      operationId: getApiTransactionsCategories
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Token not provided'
+                properties:
+                  message:
+                    type: string
+                    example: 'Token not provided'
+      tags:
+        - API
+      security: []
+  '/api/transactions/{id}':
+    get:
+      summary: ''
+      operationId: getApiTransactionsId
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Token not provided'
+                properties:
+                  message:
+                    type: string
+                    example: 'Token not provided'
+      tags:
+        - API
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the transaction.'
+        example: consequatur
+        required: true
+        schema:
+          type: string
   /api/transactions/chat:
     post:
       summary: ''
@@ -677,4 +757,110 @@ paths:
                   example: 'Beli kopi di Starbucks 65 ribu'
               required:
                 - message
+      security: []
+  /api/wallet/balance:
+    get:
+      summary: ''
+      operationId: getApiWalletBalance
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Token not provided'
+                properties:
+                  message:
+                    type: string
+                    example: 'Token not provided'
+      tags:
+        - API
+      security: []
+  /api/wallet/topup:
+    post:
+      summary: ''
+      operationId: postApiWalletTopup
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                  description: 'Nominal transaksi wallet dalam integer IDR. Must be at least 1.'
+                  example: 100000
+              required:
+                - amount
+      security: []
+  /api/wallet/withdraw:
+    post:
+      summary: ''
+      operationId: postApiWalletWithdraw
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                  description: 'Nominal transaksi wallet dalam integer IDR. Must be at least 1.'
+                  example: 100000
+                account_number:
+                  type: string
+                  description: 'Nomor rekening tujuan penarikan. Must not be greater than 50 characters.'
+                  example: '1234567890'
+              required:
+                - amount
+                - account_number
+      security: []
+  /api/wallet/send:
+    post:
+      summary: ''
+      operationId: postApiWalletSend
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: integer
+                  description: 'Nominal transaksi wallet dalam integer IDR. Must be at least 1.'
+                  example: 100000
+                recipient_email:
+                  type: string
+                  description: 'Email penerima yang sudah terdaftar. Must be a valid email address. The <code>email</code> of an existing record in the users table. Must not be one of <code></code>.'
+                  example: user@email.com
+                note:
+                  type: string
+                  description: 'Catatan transfer opsional. Must not be greater than 255 characters.'
+                  example: opsional
+                  nullable: true
+              required:
+                - amount
+                - recipient_email
       security: []

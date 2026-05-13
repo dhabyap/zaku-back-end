@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,5 +38,13 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::get('/transactions/stats', [TransactionController::class, 'stats']);
+    Route::get('/transactions/categories', [TransactionController::class, 'categories']);
+    Route::get('/transactions/{id}', [TransactionController::class, 'show']);
     Route::post('/transactions/chat', [TransactionController::class, 'chat']);
+
+    Route::get('/wallet/balance', [WalletController::class, 'balance']);
+    Route::post('/wallet/topup', [WalletController::class, 'topup']);
+    Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
+    Route::post('/wallet/send', [WalletController::class, 'send']);
 });

@@ -236,15 +236,15 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      user_id:
+      email:
         custom: []
-        name: user_id
-        description: 'ID user yang akan diverifikasi.'
+        name: email
+        description: 'Email user yang akan diverifikasi. Must be a valid email address.'
         required: true
-        example: 1
-        type: integer
+        example: user@example.com
+        type: string
         enumValues: []
-        exampleWasSpecified: true
+        exampleWasSpecified: false
         nullable: false
         deprecated: false
       code:
@@ -258,9 +258,21 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
+      user_id:
+        custom: []
+        name: user_id
+        description: 'ID user yang akan diverifikasi.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanBodyParameters:
-      user_id: 1
+      email: user@example.com
       code: '123456'
+      user_id: 1
     fileParameters: []
     responses:
       -
