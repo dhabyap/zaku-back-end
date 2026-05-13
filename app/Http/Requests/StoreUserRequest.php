@@ -13,8 +13,9 @@ class StoreUserRequest extends ApiFormRequest
     {
         return [
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
-            'full_name' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'name' => ['required_without:full_name', 'string', 'max:255'],
+            'full_name' => ['required_without:name', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:30'],
         ];
     }

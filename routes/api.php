@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,4 +24,18 @@ Route::prefix('auth')->group(function () {
     Route::post('/resend-verification', [AuthController::class, 'resendVerification'])->middleware('throttle:verification');
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:password-reset');
     Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('jwt.auth');
+    Route::get('/me', [AuthController::class, 'me'])->middleware('jwt.auth');
+    Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('jwt.auth');
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('jwt.auth');
+});
+
+Route::middleware('jwt.auth')->group(function () {
+    Route::get('/user/profile', [UserController::class, 'profile']);
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
+    Route::put('/user/budget', [UserController::class, 'updateBudget']);
+
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+
+    Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::post('/transactions/chat', [TransactionController::class, 'chat']);
 });

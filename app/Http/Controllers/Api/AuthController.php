@@ -14,6 +14,7 @@ use App\Models\VerificationCode;
 use App\Models\Wallet;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -65,7 +66,7 @@ class AuthController extends Controller
             $user = User::create([
                 'email' => $request->string('email')->lower()->toString(),
                 'password' => $request->string('password')->toString(),
-                'full_name' => $request->string('full_name')->toString(),
+                'full_name' => $request->input('name', $request->input('full_name')),
                 'phone_number' => $request->input('phone_number'),
             ]);
 
@@ -129,16 +130,97 @@ class AuthController extends Controller
             return $this->unauthorizedResponse('Invalid credentials.');
         }
 
-        if (! $user->isVerified()) {
-            return $this->forbiddenResponse('Email address is not verified.');
-        }
-
         $user->forceFill(['last_login_at' => now()])->save();
 
         return $this->successResponse([
             'token' => JWTAuth::fromUser($user),
             'user' => new UserResource($user->load('wallet')),
         ], 'Login successful');
+    }
+
+    /**
+     * Get authenticated user profile
+     *
+     * Mengambil data profil user yang sedang login.
+     *
+     * @group Authentication
+     *
+     * @authenticated
+     *
+     * @response {
+     *   "status": "success",
+     *   "data": {
+     *     "id": 1,
+     *     "name": "John Doe",
+     *     "email": "user@example.com"
+     *   }
+     * }
+     */
+    public function me(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->full_name,
+                'email' => $user->email,
+            ],
+            'message' => 'Profile retrieved successfully',
+        ]);
+    }
+
+    /**
+     * Refresh JWT token
+     *
+     * Membuat token JWT baru dan menginvalidasi token lama.
+     *
+     * @group Authentication
+     *
+     * @authenticated
+     *
+     * @response {
+     *   "status": "success",
+     *   "data": {
+     *     "access_token": "jwt_token_here",
+     *     "refresh_token": "jwt_token_here"
+     *   }
+     * }
+     */
+    public function refresh(): JsonResponse
+    {
+        $token = JWTAuth::parseToken()->refresh();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'access_token' => $token,
+                'refresh_token' => $token,
+            ],
+            'message' => 'Token refreshed successfully',
+        ]);
+    }
+
+    /**
+     * Logout user
+     *
+     * Menginvalidasi token JWT yang sedang digunakan.
+     *
+     * @group Authentication
+     *
+     * @authenticated
+     *
+     * @response {
+     *   "status": "success",
+     *   "message": "Successfully logged out"
+     * }
+     */
+    public function logout(): JsonResponse
+    {
+        JWTAuth::parseToken()->invalidate();
+
+        return $this->successResponse(null, 'Successfully logged out');
     }
 
     /**

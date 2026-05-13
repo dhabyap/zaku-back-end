@@ -11,15 +11,13 @@ class TransactionResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'wallet_id' => $this->wallet_id,
-            'type' => $this->type,
-            'amount' => $this->amount,
             'description' => $this->description,
-            'status' => $this->status,
-            'transaction_date' => $this->transaction_date?->toISOString(),
-            'reference_id' => $this->reference_id,
-            'created_at' => $this->created_at?->toISOString(),
-            'updated_at' => $this->updated_at?->toISOString(),
+            'amount' => (int) $this->amount,
+            'type' => $this->type,
+            'category_name' => $this->category?->name ?? 'LAINNYA',
+            'category_icon' => $this->category?->icon ?? '📌',
+            'date_formatted' => $this->transaction_date?->translatedFormat('j F Y'),
+            'source' => $this->source ?? 'manual',
         ];
     }
 }
