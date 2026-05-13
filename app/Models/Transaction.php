@@ -11,9 +11,13 @@ class Transaction extends Model
 {
     use HasFactory;
 
-    public const TYPE_DEBIT = 'debit';
+    public const TYPE_INCOME = 'income';
 
-    public const TYPE_CREDIT = 'credit';
+    public const TYPE_EXPENSE = 'expense';
+
+    public const SOURCE_MANUAL = 'manual';
+
+    public const SOURCE_CHAT = 'chat';
 
     public const STATUS_PENDING = 'pending';
 
@@ -23,9 +27,12 @@ class Transaction extends Model
 
     protected $fillable = [
         'wallet_id',
+        'category_id',
         'type',
         'amount',
         'description',
+        'source',
+        'raw_message',
         'status',
         'transaction_date',
         'reference_id',
@@ -41,14 +48,19 @@ class Transaction extends Model
         return $this->belongsTo(Wallet::class);
     }
 
-    public function isDebit(): bool
+    public function category(): BelongsTo
     {
-        return $this->type === self::TYPE_DEBIT;
+        return $this->belongsTo(Category::class);
     }
 
-    public function isCredit(): bool
+    public function isIncome(): bool
     {
-        return $this->type === self::TYPE_CREDIT;
+        return $this->type === self::TYPE_INCOME;
+    }
+
+    public function isExpense(): bool
+    {
+        return $this->type === self::TYPE_EXPENSE;
     }
 
     public function isPending(): bool

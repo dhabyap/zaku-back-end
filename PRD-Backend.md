@@ -323,6 +323,69 @@ public function login(LoginRequest $request)
 }
 ```
 
+### Endpoint: GET /api/auth/me
+**Middleware:** jwt.auth
+**Description:** Get authenticated user profile
+
+**Headers:**
+```http
+Authorization: Bearer {access_token}
+Accept: application/json
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "user@example.com"
+  }
+}
+```
+
+### Endpoint: POST /api/auth/refresh
+**Middleware:** jwt.auth
+**Description:** Refresh JWT token dan invalidate token lama
+
+**Headers:**
+```http
+Authorization: Bearer {access_token}
+Accept: application/json
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "access_token": "eyJhbGc...",
+    "refresh_token": "eyJhbGc..."
+  }
+}
+```
+
+**Note:** Backend menggunakan `tymon/jwt-auth`; `refresh_token` dikembalikan untuk kompatibilitas frontend dan saat ini bernilai sama dengan token JWT baru.
+
+### Endpoint: POST /api/auth/logout
+**Middleware:** jwt.auth
+**Description:** Logout user dan invalidate/blacklist token JWT aktif
+
+**Headers:**
+```http
+Authorization: Bearer {access_token}
+Accept: application/json
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Successfully logged out"
+}
+```
+
 ### Endpoint: POST /api/auth/verify-email
 **Description:** Verify email dengan kode yang dikirim
 
@@ -361,7 +424,7 @@ public function login(LoginRequest $request)
 ```
 
 ### Endpoint: POST /api/auth/change-password
-**Middleware:** auth:api
+**Middleware:** jwt.auth
 **Description:** Change user password
 
 **Request:**

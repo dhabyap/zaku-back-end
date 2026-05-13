@@ -9,13 +9,10 @@ trait ApiResponse
     protected function successResponse(mixed $data = null, string $message = 'Operation successful', int $statusCode = 200): JsonResponse
     {
         $response = [
-            'status' => 'success',
+            'success' => true,
+            'data' => $data,
             'message' => $message,
         ];
-
-        if ($data !== null) {
-            $response['data'] = $data;
-        }
 
         return response()->json($response, $statusCode);
     }
@@ -23,13 +20,10 @@ trait ApiResponse
     protected function errorResponse(string $message = 'Operation failed', int $statusCode = 400, mixed $errors = null): JsonResponse
     {
         $response = [
-            'status' => 'error',
+            'success' => false,
+            'data' => $errors === null ? null : ['errors' => $errors],
             'message' => $message,
         ];
-
-        if ($errors !== null) {
-            $response['errors'] = $errors;
-        }
 
         return response()->json($response, $statusCode);
     }

@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('wallet_id')->constrained()->cascadeOnDelete();
-            $table->enum('type', ['debit', 'credit']);
+            $table->enum('type', ['income', 'expense']);
             $table->decimal('amount', 15, 2);
             $table->text('description');
-            $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
+            $table->enum('status', ['pending', 'completed', 'failed'])->default('completed');
             $table->dateTime('transaction_date')->index();
             $table->string('reference_id')->nullable();
             $table->timestamps();
