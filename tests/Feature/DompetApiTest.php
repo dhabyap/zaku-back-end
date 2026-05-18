@@ -153,6 +153,23 @@ class DompetApiTest extends TestCase
             ->assertJsonPath('data.amount', 35000)
             ->assertJsonPath('data.category', 'MAKANAN');
 
+        $otherUser = User::factory()->create();
+        $otherWallet = Wallet::create(['user_id' => $otherUser->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
+        $otherTransaction = Transaction::create([
+            'wallet_id' => $otherWallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 10000,
+            'description' => 'Transaksi user lain',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        $this->getJson("/api/transactions/{$otherTransaction->id}", $headers)
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+
         $this->getJson('/api/transactions/stats', $headers)
             ->assertOk()
             ->assertJsonPath('data.total', 1)
@@ -174,6 +191,10 @@ class DompetApiTest extends TestCase
             ->assertJsonPath('data.balance', 1100000)
             ->assertJsonPath('data.message', 'Top up berhasil.');
 
+        $this->postJson('/api/wallet/topup', ['amount' => 0], $headers)
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
+
         $this->postJson('/api/wallet/withdraw', [
             'amount' => 200000,
             'account_number' => '1234567890',
@@ -190,6 +211,20 @@ class DompetApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.balance', 850000)
             ->assertJsonPath('data.message', 'Uang berhasil dikirim.');
+
+        $this->postJson('/api/wallet/send', [
+            'recipient_email' => 'missing@example.com',
+            'amount' => 50000,
+        ], $headers)
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
+
+        $this->postJson('/api/wallet/send', [
+            'recipient_email' => 'recipient@example.com',
+            'amount' => 999999999,
+        ], $headers)
+            ->assertStatus(422)
+            ->assertJsonPath('success', false);
 
         $this->postJson('/api/wallet/withdraw', [
             'amount' => 999999999,
