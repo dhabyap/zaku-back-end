@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
@@ -232,6 +233,32 @@ class DompetApiTest extends TestCase
         ], $headers)
             ->assertStatus(422)
             ->assertJsonPath('success', false);
+    }
+
+    public function test_dashboard_does_not_fail_when_categories_table_is_missing(): void
+    {
+        $user = User::factory()->create();
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
+
+        Transaction::create([
+            'wallet_id' => $wallet->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 35000,
+            'description' => 'Beli makan siang',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        Schema::disableForeignKeyConstraints();
+        Schema::dropIfExists('categories');
+        Schema::enableForeignKeyConstraints();
+
+        $this->getJson('/api/dashboard', $this->authHeaders($user))
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.insight_strip.text', 'Catatan bulan ini siap dipantau')
+            ->assertJsonPath('data.recent_transactions.0.category_name', 'LAINNYA');
     }
 
     private function authHeaders(User $user): array
