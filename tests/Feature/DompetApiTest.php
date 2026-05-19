@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -152,6 +153,77 @@ class DompetApiTest extends TestCase
             ->assertJsonPath('data.amount_formatted', null)
             ->assertJsonPath('data.category', null)
             ->assertJsonPath('data.type', null);
+
+        config([
+            'services.groq.key' => 'test-groq-key',
+            'services.gemini.key' => 'test-gemini-key',
+        ]);
+
+        Http::fake([
+            'api.groq.com/*' => Http::sequence()
+                ->push([
+                    'choices' => [
+                        [
+                            'message' => [
+                                'content' => json_encode([
+                                    'response' => 'Oke, makan siang udah dicatat.',
+                                    'description' => 'Makan siang',
+                                    'amount' => 35000,
+                                    'category' => 'MAKANAN',
+                                    'type' => 'expense',
+                                ]),
+                            ],
+                        ],
+                    ],
+                ])
+                ->push([
+                    'error' => [
+                        'message' => 'Rate limit exceeded',
+                    ],
+                ], 429),
+            'generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [
+                    [
+                        'content' => [
+                            'parts' => [
+                                [
+                                    'text' => json_encode([
+                                        'response' => 'Gaji freelance sudah dicatat.',
+                                        'description' => 'Gaji freelance',
+                                        'amount' => 1000000,
+                                        'category' => 'GAJI',
+                                        'type' => 'income',
+                                    ]),
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ]),
+        ]);
+
+        $this->postJson('/api/ai/chat', [
+            'message' => 'Beli makan siang 35rb',
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('data.response', 'Oke, makan siang udah dicatat.')
+            ->assertJsonPath('data.description', 'Makan siang')
+            ->assertJsonPath('data.amount', 35000)
+            ->assertJsonPath('data.category', '☕ MAKANAN');
+
+        Http::assertSentCount(1);
+
+        $this->postJson('/api/ai/chat', [
+            'message' => 'Gaji freelance 1 juta',
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('data.response', 'Gaji freelance sudah dicatat.')
+            ->assertJsonPath('data.description', 'Gaji freelance')
+            ->assertJsonPath('data.amount', 1000000)
+            ->assertJsonPath('data.amount_formatted', '+Rp 1.000.000')
+            ->assertJsonPath('data.type', 'income');
+
+        Http::assertSentCount(3);
     }
 
     public function test_frontend_gap_transaction_and_wallet_endpoints(): void

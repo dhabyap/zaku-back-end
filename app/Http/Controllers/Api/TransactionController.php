@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ChatTransactionRequest;
 use App\Models\Transaction;
+use App\Services\AiTransactionParserService;
 use App\Services\DateLabelService;
 use App\Services\TransactionParserService;
 use App\Services\TransactionService;
@@ -158,15 +159,28 @@ class TransactionController extends Controller
 
     public function aiChat(
         ChatTransactionRequest $request,
+        AiTransactionParserService $aiParser,
         TransactionParserService $parser,
         TransactionService $transactions,
     ): JsonResponse {
         $message = $request->string('message')->toString();
-        $parsed = $parser->parse($message);
+        $parsed = $aiParser->parse($message);
 
-        if ($parsed['amount'] <= 0) {
+        if ($parsed['provider'] === 'local') {
+            $localParsed = $parser->parse($message);
+            $parsed = [
+                'description' => $localParsed['description'],
+                'amount' => $localParsed['amount'],
+                'category' => $localParsed['category'],
+                'type' => $localParsed['type'],
+                'response' => null,
+                'provider' => 'local',
+            ];
+        }
+
+        if ($parsed['amount'] === null || $parsed['amount'] <= 0 || $parsed['category'] === null || $parsed['type'] === null) {
             return $this->successResponse([
-                'response' => 'Aku belum menemukan nominal transaksi. Coba tulis nominalnya, contoh: Beli kopi 65 ribu.',
+                'response' => $parsed['response'] ?? 'Aku belum menemukan nominal transaksi. Coba tulis nominalnya, contoh: Beli kopi 65 ribu.',
                 'description' => null,
                 'amount' => null,
                 'amount_formatted' => null,
@@ -180,13 +194,13 @@ class TransactionController extends Controller
             $parsed['category'],
             $parsed['type'],
             $parsed['amount'],
-            $parsed['description'],
+            $parsed['description'] ?? $message,
             Transaction::SOURCE_CHAT,
             $message,
         );
 
         return $this->successResponse([
-            'response' => $this->replyMessage($transaction),
+            'response' => $parsed['response'] ?? $this->replyMessage($transaction),
             'description' => $transaction->description,
             'amount' => (int) $transaction->amount,
             'amount_formatted' => $this->formatAmount((int) $transaction->amount, $transaction->type),
