@@ -13,6 +13,7 @@ use App\Traits\ApiResponse;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
@@ -36,6 +37,38 @@ class TransactionController extends Controller
             'category' => $transaction->category?->name ?? 'LAINNYA',
             'created_at' => $transaction->created_at?->toISOString(),
         ], 'Detail transaksi berhasil diambil');
+    }
+
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $transaction = $this->baseQuery($request)
+            ->with('wallet')
+            ->find($id);
+
+        if (! $transaction) {
+            return $this->notFoundResponse('Transaction not found.');
+        }
+
+        $balance = DB::transaction(function () use ($transaction) {
+            $wallet = $transaction->wallet;
+            $amount = (float) $transaction->amount;
+
+            if ($transaction->type === Transaction::TYPE_INCOME) {
+                $wallet->balance = number_format(((float) $wallet->balance) - $amount, 2, '.', '');
+            } else {
+                $wallet->balance = number_format(((float) $wallet->balance) + $amount, 2, '.', '');
+            }
+
+            $wallet->save();
+            $transaction->delete();
+
+            return (int) $wallet->balance;
+        });
+
+        return $this->successResponse([
+            'id' => $id,
+            'balance' => $balance,
+        ], 'Transaksi berhasil dihapus');
     }
 
     public function stats(Request $request): JsonResponse
