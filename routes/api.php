@@ -40,6 +40,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/transactions', [TransactionController::class, 'index']);
     Route::get('/transactions/stats', [TransactionController::class, 'stats']);
     Route::get('/transactions/categories', [TransactionController::class, 'categories']);
+    Route::post('/ai/chat', [TransactionController::class, 'aiChat']);
     Route::get('/transactions/{id}', [TransactionController::class, 'show']);
     Route::post('/transactions/chat', [TransactionController::class, 'chat']);
 
