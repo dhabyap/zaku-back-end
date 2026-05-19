@@ -202,6 +202,10 @@ class DompetApiTest extends TestCase
             ->assertNotFound()
             ->assertJsonPath('success', false);
 
+        $this->deleteJson("/api/transactions/{$otherTransaction->id}", [], $headers)
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+
         $this->getJson('/api/transactions/stats', $headers)
             ->assertOk()
             ->assertJsonPath('data.total', 1)
@@ -264,6 +268,19 @@ class DompetApiTest extends TestCase
         ], $headers)
             ->assertStatus(422)
             ->assertJsonPath('success', false);
+
+        $this->deleteJson("/api/transactions/{$transaction->id}", [], $headers)
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.id', $transaction->id)
+            ->assertJsonPath('data.balance', 885000);
+
+        $this->assertDatabaseMissing('transactions', [
+            'id' => $transaction->id,
+        ]);
+
+        $wallet->refresh();
+        $this->assertSame('885000.00', $wallet->balance);
     }
 
     public function test_dashboard_does_not_fail_when_categories_table_is_missing(): void

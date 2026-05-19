@@ -42,6 +42,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/transactions/categories', [TransactionController::class, 'categories']);
     Route::post('/ai/chat', [TransactionController::class, 'aiChat']);
     Route::get('/transactions/{id}', [TransactionController::class, 'show']);
+    Route::delete('/transactions/{id}', [TransactionController::class, 'destroy']);
     Route::post('/transactions/chat', [TransactionController::class, 'chat']);
 
     Route::get('/wallet/balance', [WalletController::class, 'balance']);
