@@ -121,6 +121,37 @@ class DompetApiTest extends TestCase
             ->assertJsonPath('data.parsed_data.amount', 65000)
             ->assertJsonPath('data.parsed_data.category', 'MAKANAN')
             ->assertJsonPath('data.parsed_data.type', 'expense');
+
+        $this->postJson('/api/ai/chat', [
+            'message' => 'Beli makan siang 35rb',
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.description', 'Makan siang')
+            ->assertJsonPath('data.amount', 35000)
+            ->assertJsonPath('data.amount_formatted', '-Rp 35.000')
+            ->assertJsonPath('data.type', 'expense')
+            ->assertJsonStructure([
+                'data' => [
+                    'response',
+                    'description',
+                    'amount',
+                    'amount_formatted',
+                    'category',
+                    'type',
+                ],
+            ]);
+
+        $this->postJson('/api/ai/chat', [
+            'message' => 'Beli makan siang',
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.description', null)
+            ->assertJsonPath('data.amount', null)
+            ->assertJsonPath('data.amount_formatted', null)
+            ->assertJsonPath('data.category', null)
+            ->assertJsonPath('data.type', null);
     }
 
     public function test_frontend_gap_transaction_and_wallet_endpoints(): void

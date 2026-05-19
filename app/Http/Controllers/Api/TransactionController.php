@@ -156,6 +156,52 @@ class TransactionController extends Controller
         ], 'Transaksi berhasil dicatat', 201);
     }
 
+    public function aiChat(
+        ChatTransactionRequest $request,
+        TransactionParserService $parser,
+        TransactionService $transactions,
+    ): JsonResponse {
+        $message = $request->string('message')->toString();
+        $parsed = $parser->parse($message);
+
+        if ($parsed['amount'] <= 0) {
+            return $this->successResponse([
+                'response' => 'Aku belum menemukan nominal transaksi. Coba tulis nominalnya, contoh: Beli kopi 65 ribu.',
+                'description' => null,
+                'amount' => null,
+                'amount_formatted' => null,
+                'category' => null,
+                'type' => null,
+            ], 'Pesan berhasil diproses');
+        }
+
+        $transaction = $transactions->create(
+            $request->user(),
+            $parsed['category'],
+            $parsed['type'],
+            $parsed['amount'],
+            $parsed['description'],
+            Transaction::SOURCE_CHAT,
+            $message,
+        );
+
+        return $this->successResponse([
+            'response' => $this->replyMessage($transaction),
+            'description' => $transaction->description,
+            'amount' => (int) $transaction->amount,
+            'amount_formatted' => $this->formatAmount((int) $transaction->amount, $transaction->type),
+            'category' => trim(($transaction->category?->icon ?? 'ðŸ“Œ').' '.($transaction->category?->name ?? 'LAINNYA')),
+            'type' => $transaction->type,
+        ], 'Transaksi berhasil dicatat');
+    }
+
+    private function formatAmount(int $amount, string $type): string
+    {
+        $prefix = $type === Transaction::TYPE_INCOME ? '+' : '-';
+
+        return $prefix.'Rp '.number_format($amount, 0, ',', '.');
+    }
+
     private function replyMessage(Transaction $transaction): string
     {
         if ($transaction->type === Transaction::TYPE_INCOME) {
