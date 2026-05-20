@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ChangePasswordRequest;
 use App\Http\Requests\EmailRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\VerifyEmailRequest;
 use App\Http\Resources\UserResource;
@@ -18,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Carbon;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -27,7 +29,7 @@ class AuthController extends Controller
     /**
      * Register user
      *
-     * Membuat user baru, wallet default, kode verifikasi email, dan JWT token.
+     * Membuat user baru, ledger internal, kode verifikasi email, dan JWT token.
      *
      * @group Authentication
      *
@@ -46,15 +48,7 @@ class AuthController extends Controller
      *       "id": 1,
      *       "full_name": "John Doe",
      *       "email": "user@example.com",
-     *       "phone_number": "08123456789",
-     *       "is_verified": false,
-     *       "last_login_at": null,
-     *       "wallet": {
-     *         "id": 1,
-     *         "user_id": 1,
-     *         "balance": "0.00",
-     *         "status": "active"
-     *       }
+     *       "avatar_initial": "J"
      *     },
      *     "token": "jwt_token_here"
      *   }
@@ -130,6 +124,10 @@ class AuthController extends Controller
             return $this->unauthorizedResponse('Invalid credentials.');
         }
 
+        if (! $user->isVerified()) {
+            return $this->forbiddenResponse('Email address is not verified.');
+        }
+
         $user->forceFill(['last_login_at' => now()])->save();
 
         return $this->successResponse([
@@ -160,15 +158,11 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'id' => $user->id,
-                'name' => $user->full_name,
-                'email' => $user->email,
-            ],
-            'message' => 'Profile retrieved successfully',
-        ]);
+        return $this->successResponse([
+            'id' => $user->id,
+            'name' => $user->full_name,
+            'email' => $user->email,
+        ], 'Profile retrieved successfully');
     }
 
     /**
@@ -192,14 +186,10 @@ class AuthController extends Controller
     {
         $token = JWTAuth::parseToken()->refresh();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'access_token' => $token,
-                'refresh_token' => $token,
-            ],
-            'message' => 'Token refreshed successfully',
-        ]);
+        return $this->successResponse([
+            'access_token' => $token,
+            'refresh_token' => $token,
+        ], 'Token refreshed successfully');
     }
 
     /**
@@ -221,6 +211,40 @@ class AuthController extends Controller
         JWTAuth::parseToken()->invalidate();
 
         return $this->successResponse(null, 'Successfully logged out');
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $email = $request->string('email')->lower()->toString();
+        $row = DB::table('password_reset_tokens')->where('email', $email)->first();
+
+        if (! $row || ! Hash::check($request->string('token')->toString(), $row->token)) {
+            return $this->errorResponse('Invalid password reset token.', 422, [
+                'token' => ['Invalid password reset token.'],
+            ]);
+        }
+
+        $expiresAt = Carbon::parse($row->created_at)->addMinutes(config('auth.passwords.users.expire', 60));
+        if ($expiresAt->isPast()) {
+            return $this->errorResponse('Password reset token has expired.', 422, [
+                'token' => ['Password reset token has expired.'],
+            ]);
+        }
+
+        $user = User::where('email', $email)->first();
+        if (! $user) {
+            return $this->errorResponse('Invalid password reset token.', 422, [
+                'token' => ['Invalid password reset token.'],
+            ]);
+        }
+
+        $user->forceFill([
+            'password' => $request->string('password')->toString(),
+        ])->save();
+
+        DB::table('password_reset_tokens')->where('email', $email)->delete();
+
+        return $this->successResponse(null, 'Password has been reset successfully');
     }
 
     /**

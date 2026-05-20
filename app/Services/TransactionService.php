@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class TransactionService
 {
@@ -18,8 +19,9 @@ class TransactionService
         string $description,
         string $source = Transaction::SOURCE_MANUAL,
         ?string $rawMessage = null,
+        Carbon|string|null $transactionDate = null,
     ): Transaction {
-        return DB::transaction(function () use ($user, $category, $type, $amount, $description, $source, $rawMessage) {
+        return DB::transaction(function () use ($user, $category, $type, $amount, $description, $source, $rawMessage, $transactionDate) {
             $wallet = $user->wallet ?: Wallet::create([
                 'user_id' => $user->id,
                 'balance' => 0,
@@ -35,7 +37,7 @@ class TransactionService
                 'source' => $source,
                 'raw_message' => $rawMessage,
                 'status' => Transaction::STATUS_COMPLETED,
-                'transaction_date' => now(),
+                'transaction_date' => $transactionDate ? Carbon::parse($transactionDate) : now(),
             ]);
 
             if ($type === Transaction::TYPE_INCOME) {
