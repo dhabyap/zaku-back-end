@@ -511,5 +511,5 @@ MySQL database configuration dan environment setup.
 ---
 
 **Last Updated:** May 5, 2026  
-**For:** DOMPET Backend Project  
+**For:** Zaku Backend Project
 **Repository:** https://github.com/YOUR_ORG/YOUR_REPO

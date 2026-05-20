@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class DompetApiTest extends TestCase
+class ZakuApiTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -25,7 +25,7 @@ class DompetApiTest extends TestCase
         $this->seed(\Database\Seeders\CategorySeeder::class);
     }
 
-    public function test_register_and_login_follow_dompet_contract(): void
+    public function test_register_and_login_follow_zaku_contract(): void
     {
         Mail::fake();
 
@@ -61,7 +61,7 @@ class DompetApiTest extends TestCase
     public function test_profile_budget_dashboard_history_and_chat_endpoints(): void
     {
         $user = User::factory()->create([
-            'full_name' => 'Demo DOMPET',
+            'full_name' => 'Demo Zaku',
             'email' => 'demo@example.com',
             'monthly_budget' => 3000000,
         ]);

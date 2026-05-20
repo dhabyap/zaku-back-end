@@ -1,291 +1,468 @@
-# 📖 Universal Documentation Template
+# Zaku Backend API
 
-A comprehensive, reusable documentation system template for ANY project type. This template provides a professional structure for managing project documentation, tasks, and workflows.
+Backend API untuk aplikasi Zaku, yaitu aplikasi pencatatan keuangan digital. Project ini dibuat dengan Laravel dan menyediakan API untuk login, register, wallet, transaksi, dashboard, budget bulanan, dan pencatatan transaksi lewat chat.
 
----
+README ini dibuat untuk dua tipe pembaca:
 
-## 🎯 What is This?
+- Orang awam/non-IT: supaya paham project ini untuk apa dan cara menjalankannya secara minimal.
+- IT/developer: supaya bisa setup, menjalankan, testing, dan integrasi API di local.
 
-This is a **template-based documentation system** designed to:
-- ✅ Organize project documentation systematically
-- ✅ Manage tasks via GitHub Issues with full traceability
-- ✅ Maintain consistent git workflows across teams
-- ✅ Track project phases and progress
-- ✅ Create professional PRDs and technical documentation
-- ✅ Work for ANY project type (Backend, Frontend, Mobile, DevOps, etc.)
+## Gambaran Singkat
 
----
+Project ini adalah backend, bukan aplikasi tampilan utama. Artinya project ini berjalan sebagai server API yang akan dipanggil oleh frontend/mobile app.
 
-## 📚 Getting Started with This Template
+Contoh fungsi yang sudah tersedia:
 
-### 1. **Read the Universal Guide First**
-Start here to understand the complete documentation system:
+- Register dan login user.
+- Verifikasi email dengan kode.
+- JWT Bearer token untuk akses endpoint yang butuh login.
+- Wallet: cek saldo, top up, withdraw, kirim uang.
+- Transaksi: daftar transaksi, statistik, kategori, tambah transaksi lewat chat.
+- Dashboard ringkasan keuangan.
+- Dokumentasi API otomatis lewat Scribe di `/docs`.
 
-- **[UNIVERSAL_TEMPLATE_GUIDE.md](./UNIVERSAL_TEMPLATE_GUIDE.md)** - Complete guide on how to use this template
+## Teknologi
 
-### 2. **Essential Documentation Files**
+- PHP 8.1 atau lebih baru.
+- Laravel 10.
+- Composer.
+- MySQL untuk penggunaan local normal.
+- SQLite untuk testing.
+- JWT Auth dengan `tymon/jwt-auth`.
+- Scribe untuk dokumentasi API.
+- Node.js dan NPM hanya diperlukan jika ingin menjalankan asset Vite.
 
-| File | Purpose |
-|------|---------|
-| [DOCUMENTATION_SYSTEM.md](./DOCUMENTATION_SYSTEM.md) | How the documentation system works |
-| [GITHUB_TEMPLATE_SETUP.md](./GITHUB_TEMPLATE_SETUP.md) | Setup GitHub issue & PR templates |
-| [GIT_WORKFLOW.md](./GIT_WORKFLOW.md) | Git standards & commit conventions |
-| [GITHUB_ISSUES.md](./GITHUB_ISSUES.md) | Guide for creating effective GitHub issues |
-| [CHANGELOG.md](./CHANGELOG.md) | Track all project versions & changes |
+## Kebutuhan Sebelum Setup
 
-### 3. **Project-Specific Files** (Customize These)
+Minimal yang perlu terpasang di komputer:
 
-- **PRD-[ProjectName].md** - Product requirements & specifications (RENAME THIS)
-- **TASK_LIST.md** - All project tasks linked to GitHub issues (UPDATE THIS)
-- **docs/issues/** - Individual issue documentation (CREATE FOR YOUR PROJECT)
-- **docs/implementation/** - Implementation notes (CREATE FOR YOUR PROJECT)
-- **docs/pull-requests/** - PR documentation (CREATE FOR YOUR PROJECT)
+- PHP 8.1+.
+- Composer.
+- MySQL/MariaDB.
+- Git.
 
----
+Opsional:
 
-## 🔄 How to Use This Template
+- Node.js 18+ dan NPM, jika ingin menjalankan `npm run dev`.
+- Postman/Insomnia, jika ingin mencoba API lebih nyaman.
+- Mailpit atau SMTP lain, jika ingin menguji email sungguhan.
 
-### Step 1: Customize for Your Project
-1. Rename `PRD-Backend.md` to `PRD-YourProjectName.md`
-2. Update `TASK_LIST.md` with your actual project tasks
-3. Modify the repository link in documentation files (replace `YOUR_ORG/YOUR_REPO`)
-4. Update team information in relevant files
+Untuk Windows, cara paling mudah biasanya memakai Laragon, XAMPP, atau instalasi PHP + Composer manual. Untuk macOS/Linux, bisa memakai PHP dari package manager, Homebrew, Docker, atau environment lain yang biasa dipakai tim.
 
-### Step 2: Create Your GitHub Issue Templates
-Follow [GITHUB_TEMPLATE_SETUP.md](./GITHUB_TEMPLATE_SETUP.md) to:
-- Setup issue templates in `.github/ISSUE_TEMPLATE/`
-- Setup PR template in `.github/PULL_REQUEST_TEMPLATE/`
+## Setup Local Paling Minimal
 
-### Step 3: Start Working
-1. Read your project's PRD (Product Requirements Document)
-2. Check TASK_LIST.md for available tasks
-3. Create GitHub issues for each task
-4. Follow GIT_WORKFLOW.md for development
-5. Track progress in CHANGELOG.md
+Ikuti langkah ini dari folder project:
 
----
-
-## 📁 Directory Structure
-
-```
-project-root/
-├── .github/                    # GitHub configuration
-│   ├── ISSUE_TEMPLATE/         # Issue templates
-│   └── PULL_REQUEST_TEMPLATE/  # PR template
-│
-├── docs/                       # Project documentation
-│   ├── DOCUMENTATION_GUIDE.md  # How to document your project
-│   ├── WORKING_ON.md           # Current work status
-│   ├── issues/                 # Individual issue documentation
-│   │   └── ISSUE-001.md
-│   ├── implementation/         # Implementation notes
-│   │   └── IMPL-001.md
-│   └── pull-requests/          # PR documentation
-│       └── PR-001.md
-│
-├── DOCUMENTATION_SYSTEM.md     # System overview
-├── UNIVERSAL_TEMPLATE_GUIDE.md # This template guide
-├── GIT_WORKFLOW.md             # Git standards
-├── GITHUB_ISSUES.md            # Issue creation guide
-├── GITHUB_TEMPLATE_SETUP.md    # Template setup guide
-├── PRD-YourProject.md          # Your project requirements (RENAME)
-├── TASK_LIST.md                # Your project tasks
-├── CHANGELOG.md                # Version history
-├── SETUP_COMPLETE.md           # Setup verification
-└── README.md                   # This file
-```
-
----
-
-## 🚀 Quick Start for Using This Template
-
-### Prerequisites
-- Git installed
-- GitHub account (for issues & PRs)
-- Your development environment setup for your specific project type
-
-### Initial Setup
 ```bash
-# 1. Clone this template repository
-git clone https://github.com/dhabyap/documentation-template.git
-cd documentation-template
-
-# 2. Read the complete guide
-cat UNIVERSAL_TEMPLATE_GUIDE.md
-
-# 3. Customize for your project
-# - Rename PRD-Backend.md → PRD-YourProject.md
-# - Update TASK_LIST.md with your tasks
-# - Update repository links in documentation
-
-# 4. Setup GitHub templates
-# Follow GITHUB_TEMPLATE_SETUP.md
-
-# 5. Create initial GitHub issues
-# Use GITHUB_ISSUES.md as reference
+cd backend
 ```
 
----
+Jika posisi terminal sudah di folder ini, lanjut ke langkah berikutnya.
 
-## 📊 Documentation Files Overview
+### 1. Install dependency PHP
 
-### System Documentation
-- **DOCUMENTATION_SYSTEM.md** - How the documentation framework operates
-- **UNIVERSAL_TEMPLATE_GUIDE.md** - Complete template usage guide
-- **GITHUB_TEMPLATE_SETUP.md** - Setup GitHub templates for your repo
-
-### Development Standards
-- **GIT_WORKFLOW.md** - Git conventions, branch naming, commit standards
-- **GITHUB_ISSUES.md** - How to create effective GitHub issues
-- **docs/DOCUMENTATION_GUIDE.md** - How to document your project
-
-### Project Tracking
-- **PRD-YourProject.md** - Product requirements & specifications
-- **TASK_LIST.md** - Master list of all project tasks
-- **CHANGELOG.md** - Track versions, releases, and changes
-- **docs/WORKING_ON.md** - Current work status snapshot
-
-### Issue & PR Documentation
-- **docs/issues/ISSUE-XXX.md** - Individual issue documentation
-- **docs/implementation/IMPL-XXX.md** - Implementation notes
-- **docs/pull-requests/PR-XXX.md** - PR documentation
-
----
-
-## 🎓 Learning Path
-
-**For First Time Users:**
-1. Start with [UNIVERSAL_TEMPLATE_GUIDE.md](./UNIVERSAL_TEMPLATE_GUIDE.md)
-2. Read [DOCUMENTATION_SYSTEM.md](./DOCUMENTATION_SYSTEM.md)
-3. Review [GIT_WORKFLOW.md](./GIT_WORKFLOW.md)
-4. Check [GITHUB_TEMPLATE_SETUP.md](./GITHUB_TEMPLATE_SETUP.md)
-
-**For Project Leads:**
-1. Read [UNIVERSAL_TEMPLATE_GUIDE.md](./UNIVERSAL_TEMPLATE_GUIDE.md) (complete overview)
-2. Customize PRD file for your project
-3. Setup GitHub templates per [GITHUB_TEMPLATE_SETUP.md](./GITHUB_TEMPLATE_SETUP.md)
-4. Create initial task list in [TASK_LIST.md](./TASK_LIST.md)
-
-**For Developers:**
-1. Read your project's PRD document
-2. Review [GIT_WORKFLOW.md](./GIT_WORKFLOW.md)
-3. Check [TASK_LIST.md](./TASK_LIST.md) for available work
-4. Read the specific task issue in GitHub
-
----
-
-## 🔧 Customization Guide
-
-### For Different Project Types
-
-#### Backend/API Project
-- Use PRD template in this repo as reference
-- Add API documentation in `docs/api/`
-- Include database schema documentation
-- Add deployment guide
-
-#### Frontend Project  
-- Add component documentation
-- Include design system guide
-- Add testing guidelines
-- Include accessibility checklist
-
-#### Mobile Project
-- Add platform-specific setup guides
-- Include design guidelines
-- Add testing for multiple devices
-- Include release checklist
-
-#### DevOps/Infrastructure Project
-- Add deployment procedures
-- Include infrastructure diagrams
-- Add troubleshooting guide
-- Include disaster recovery procedures
-
----
-
-## 📞 Support & Questions
-
-### About the Template System
-- See [DOCUMENTATION_SYSTEM.md](./DOCUMENTATION_SYSTEM.md)
-
-### Setting Up for Your Project  
-- See [UNIVERSAL_TEMPLATE_GUIDE.md](./UNIVERSAL_TEMPLATE_GUIDE.md)
-
-### Git & Workflow Questions
-- See [GIT_WORKFLOW.md](./GIT_WORKFLOW.md)
-
-### Creating GitHub Issues
-- See [GITHUB_ISSUES.md](./GITHUB_ISSUES.md)
-
----
-
-## 🎯 Key Features
-
-✅ **Structured Documentation** - Organized folder system for all documentation  
-✅ **GitHub Integration** - Issue templates, PR templates, automation  
-✅ **Git Workflow** - Standard conventions for commits and branches  
-✅ **Task Tracking** - Linked tasks, issues, and implementation notes  
-✅ **Change Management** - CHANGELOG for tracking all versions  
-✅ **Universal Template** - Works for any project type  
-✅ **Professional Standards** - Follows industry best practices  
-
----
-
-## 📈 Using This in Your Organization
-
-### For Single Projects
-1. Clone this repository
-2. Customize files for your project
-3. Follow the workflow
-
-### For Multiple Projects
-1. Create this as a template repository on GitHub
-2. Use GitHub's "Use this template" feature for new projects
-3. Each project gets the same professional structure
-
----
-
-## 📝 Example Workflow
-
-```
-1. Read UNIVERSAL_TEMPLATE_GUIDE.md → Understand the system
-2. Customize PRD-YourProject.md → Define your project
-3. Create TASK_LIST.md → List all work items
-4. Setup GitHub Templates → Enable issue/PR templates
-5. Create GitHub Issues → Define all tasks
-6. Developers pick tasks → Start working
-7. Create feature branches → Follow GIT_WORKFLOW.md
-8. Create PRs → Reference issues
-9. Update CHANGELOG.md → Track progress
-10. Track status in docs/WORKING_ON.md → Monitor progress
+```bash
+composer install
 ```
 
----
+Jika folder `vendor` sudah ada, perintah ini tetap aman dijalankan untuk memastikan dependency lengkap.
 
-## 📄 License
+### 2. Buat file `.env`
 
-Define your project license here.
+```bash
+cp .env.example .env
+```
 
----
+Di Windows PowerShell:
 
-## 👥 Team & Credits
+```powershell
+Copy-Item .env.example .env
+```
 
-This universal documentation template was created to help teams maintain professional, organized project documentation.
+### 3. Buat application key
 
-**Original Repository:** [github.com/dhabyap/documentation-template](https://github.com/dhabyap/documentation-template)
+```bash
+php artisan key:generate
+```
 
----
+### 4. Buat JWT secret
 
-## 🚀 Next Steps
+```bash
+php artisan jwt:secret
+```
 
-1. **[Read the Complete Guide →](./UNIVERSAL_TEMPLATE_GUIDE.md)**
-2. **[Setup GitHub Templates →](./GITHUB_TEMPLATE_SETUP.md)**
-3. **[Check Git Workflow →](./GIT_WORKFLOW.md)**
-4. **[Start Your Project!](./PRD-YourProject.md)**
+Pilih `yes` jika diminta overwrite `JWT_SECRET`.
 
----
+### 5. Siapkan database MySQL
 
-*Last Updated: May 7, 2026*  
-*Template Version: 1.0.0*  
-*Status: Ready to Use*
+Buat database kosong bernama:
+
+```text
+zaku_api
+```
+
+Contoh lewat MySQL CLI:
+
+```sql
+CREATE DATABASE zaku_api;
+```
+
+Lalu cek bagian database di `.env`:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=zaku_api
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Sesuaikan `DB_USERNAME` dan `DB_PASSWORD` dengan komputer masing-masing.
+
+### 6. Jalankan migrasi dan seeder
+
+```bash
+php artisan migrate --seed
+```
+
+Perintah ini membuat tabel database dan mengisi data awal, termasuk kategori transaksi dan akun demo.
+
+### 7. Jalankan server local
+
+```bash
+php artisan serve
+```
+
+Jika berhasil, API berjalan di:
+
+```text
+http://127.0.0.1:8000
+```
+
+Dokumentasi API bisa dibuka di:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+OpenAPI spec tersedia di:
+
+```text
+http://127.0.0.1:8000/docs.openapi
+```
+
+## Akun Demo
+
+Setelah menjalankan `php artisan migrate --seed`, akun demo tersedia:
+
+```text
+Email: demo@zaku.test
+Password: password
+```
+
+Gunakan akun ini untuk login dan mendapatkan JWT token.
+
+## Cara Mencoba API
+
+### Login
+
+Request:
+
+```http
+POST http://127.0.0.1:8000/api/auth/login
+Accept: application/json
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "email": "demo@zaku.test",
+  "password": "password"
+}
+```
+
+Response login akan berisi `token`. Simpan token itu untuk endpoint yang butuh login.
+
+### Mengakses Endpoint yang Butuh Login
+
+Tambahkan header:
+
+```http
+Authorization: Bearer TOKEN_DARI_LOGIN
+Accept: application/json
+```
+
+Contoh cek saldo:
+
+```http
+GET http://127.0.0.1:8000/api/wallet/balance
+Authorization: Bearer TOKEN_DARI_LOGIN
+Accept: application/json
+```
+
+## Endpoint Utama
+
+Base URL local:
+
+```text
+http://127.0.0.1:8000/api
+```
+
+Endpoint public:
+
+| Method | Endpoint | Fungsi |
+| --- | --- | --- |
+| POST | `/auth/register` | Register user baru |
+| POST | `/auth/login` | Login dan ambil JWT token |
+| POST | `/auth/verify-email` | Verifikasi email |
+| POST | `/auth/resend-verification` | Kirim ulang kode verifikasi |
+| POST | `/auth/forgot-password` | Minta token reset password |
+
+Endpoint yang membutuhkan JWT token:
+
+| Method | Endpoint | Fungsi |
+| --- | --- | --- |
+| GET | `/auth/me` | Ambil data user login |
+| POST | `/auth/refresh` | Refresh token |
+| POST | `/auth/logout` | Logout |
+| POST | `/auth/change-password` | Ganti password |
+| GET | `/user/profile` | Ambil profil dan statistik user |
+| PUT | `/user/profile` | Update profil |
+| PUT | `/user/budget` | Update budget bulanan |
+| GET | `/dashboard` | Ambil dashboard keuangan |
+| GET | `/transactions` | Ambil daftar transaksi |
+| GET | `/transactions/stats` | Ambil statistik transaksi |
+| GET | `/transactions/categories` | Ambil ringkasan kategori |
+| GET | `/transactions/{id}` | Detail transaksi |
+| DELETE | `/transactions/{id}` | Hapus transaksi |
+| POST | `/transactions/chat` | Catat transaksi dari pesan chat parser local |
+| POST | `/ai/chat` | Catat transaksi dari chat dengan AI/fallback local |
+| GET | `/wallet/balance` | Cek saldo wallet |
+| POST | `/wallet/topup` | Top up wallet |
+| POST | `/wallet/withdraw` | Withdraw wallet |
+| POST | `/wallet/send` | Kirim uang ke user lain |
+
+Dokumentasi lengkap dengan contoh request/response ada di `/docs`.
+
+## Konfigurasi `.env` Penting
+
+Minimal untuk local:
+
+```env
+APP_NAME="Zaku Backend API"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://127.0.0.1:8000
+SCRIBE_BASE_URL=http://127.0.0.1:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=zaku_api
+DB_USERNAME=root
+DB_PASSWORD=
+
+JWT_SECRET=isi_dari_php_artisan_jwt_secret
+JWT_ALGO=HS256
+```
+
+Untuk email local, default `.env.example` memakai Mailpit:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+```
+
+Jika tidak memakai Mailpit, untuk local bisa diganti menjadi:
+
+```env
+MAIL_MAILER=log
+```
+
+Dengan `MAIL_MAILER=log`, isi email akan masuk ke file log Laravel, bukan dikirim ke inbox.
+
+## Fitur Chat dan AI
+
+Ada dua endpoint chat:
+
+- `/api/transactions/chat`: parser local, tidak butuh API key AI.
+- `/api/ai/chat`: mencoba AI provider jika API key tersedia, lalu fallback ke parser local.
+
+Konfigurasi opsional:
+
+```env
+GROQ_API_KEY=
+GROQ_MODEL=llama-3.1-8b-instant
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.0-flash
+```
+
+Untuk local minimal, bagian ini boleh dikosongkan.
+
+## Menjalankan Test
+
+```bash
+php artisan test
+```
+
+Testing memakai SQLite in-memory dari `phpunit.xml`, jadi tidak mengubah database MySQL local.
+
+## Perintah yang Sering Dipakai Developer
+
+```bash
+composer install
+php artisan key:generate
+php artisan jwt:secret
+php artisan migrate
+php artisan migrate --seed
+php artisan migrate:fresh --seed
+php artisan serve
+php artisan route:list --path=api
+php artisan test
+```
+
+Jika perlu asset frontend bawaan Laravel:
+
+```bash
+npm install
+npm run dev
+```
+
+Untuk backend API saja, `npm install` tidak wajib.
+
+## Struktur Folder Penting
+
+```text
+app/
+  Http/Controllers/Api/    Controller API
+  Http/Requests/           Validasi request
+  Http/Resources/          Format response resource
+  Models/                  Model database
+  Services/                Logic bisnis dan parser transaksi
+  Traits/ApiResponse.php   Format response API konsisten
+
+database/
+  migrations/              Struktur tabel database
+  seeders/                 Data awal/demo
+
+routes/
+  api.php                  Semua route API utama
+
+config/
+  jwt.php                  Konfigurasi JWT
+  scribe.php               Konfigurasi dokumentasi API
+```
+
+## Format Response Umum
+
+Sebagian besar endpoint memakai format:
+
+```json
+{
+  "status": "success",
+  "message": "Pesan response",
+  "data": {}
+}
+```
+
+Jika error, response biasanya:
+
+```json
+{
+  "status": "error",
+  "message": "Pesan error",
+  "errors": {}
+}
+```
+
+## Troubleshooting
+
+### `composer install` gagal
+
+Pastikan PHP dan Composer sudah terpasang:
+
+```bash
+php -v
+composer -V
+```
+
+Pastikan extension PHP yang umum untuk Laravel aktif, seperti `mbstring`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `ctype`, `json`, dan `fileinfo`.
+
+### `php artisan migrate --seed` gagal koneksi database
+
+Cek MySQL sudah menyala dan konfigurasi `.env` benar:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=zaku_api
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Jika mengganti `.env`, jalankan:
+
+```bash
+php artisan config:clear
+```
+
+### Error `JWT secret is not set`
+
+Jalankan:
+
+```bash
+php artisan jwt:secret
+php artisan config:clear
+```
+
+### Endpoint protected selalu `Unauthorized`
+
+Pastikan header token benar:
+
+```http
+Authorization: Bearer TOKEN_DARI_LOGIN
+Accept: application/json
+```
+
+Token harus berasal dari endpoint `/api/auth/login`.
+
+### Dokumentasi `/docs` tidak sesuai URL local
+
+Cek `.env`:
+
+```env
+SCRIBE_BASE_URL=http://127.0.0.1:8000
+```
+
+Lalu bersihkan config:
+
+```bash
+php artisan config:clear
+```
+
+## Catatan untuk Deployment
+
+Untuk production, minimal ubah:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://domain-api-anda.com
+SCRIBE_BASE_URL=https://domain-api-anda.com
+```
+
+Gunakan database production, SMTP production, HTTPS, dan `JWT_SECRET` yang kuat. Jangan commit file `.env` ke repository.
+
+## Dokumentasi Tambahan
+
+Beberapa dokumen project lain tersedia di repository:
+
+- `PRD-Backend.md`: kebutuhan dan rancangan produk backend.
+- `TASK_LIST.md`: daftar task project.
+- `CHANGELOG.md`: catatan perubahan.
+- `GIT_WORKFLOW.md`: standar git workflow.
+- `docs/`: dokumentasi internal issue, implementation, dan pull request.

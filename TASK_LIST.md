@@ -1,7 +1,7 @@
-# DOMPET Backend API - Task List
+# Zaku Backend API - Task List
 
 ## 📋 Overview
-Project: DOMPET Backend API - REST API menggunakan Laravel dengan JWT Authentication
+Project: Zaku Backend API - REST API menggunakan Laravel dengan JWT Authentication
 
 **Tracking:** GitHub Issues → semua task tracked di [Issues](https://github.com/YOUR_ORG/YOUR_REPO/issues)
 

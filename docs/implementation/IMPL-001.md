@@ -14,12 +14,12 @@ Documentation untuk implementasi ISSUE-001: Setup Laravel Project
 
 ### 2. Environment Configuration
 - Generated `.env` file dari `.env.example`
-- Set APP_NAME="DOMPET Backend"
+- Set APP_NAME="Zaku Backend"
 - Set APP_KEY dengan `php artisan key:generate`
 - Configured APP_URL=http://localhost:8000
 
 ### 3. Database Configuration
-- Created MySQL database: `dompet_db`
+- Created MySQL database: `zaku_db`
 - Updated `.env` dengan MySQL credentials
 - Verified connection dengan `php artisan migrate`
 
@@ -85,7 +85,7 @@ None (fresh installation)
 
 ### Environment Variables Set
 ```env
-APP_NAME="DOMPET Backend"
+APP_NAME="Zaku Backend"
 APP_ENV=local
 APP_DEBUG=true
 APP_URL=http://localhost:8000
@@ -93,7 +93,7 @@ APP_URL=http://localhost:8000
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=dompet_db
+DB_DATABASE=zaku_db
 DB_USERNAME=[user]
 DB_PASSWORD=[password]
 ```

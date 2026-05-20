@@ -68,7 +68,7 @@ GitHub Issues workflow sudah fully integrated dengan project ini.
 2. **Setup Repository**:
    ```bash
    git clone <repo-url>
-   cd dompet-backend
+   cd zaku-backend
    git checkout -b develop
    ```
 

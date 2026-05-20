@@ -27,7 +27,7 @@ Membuat fresh Laravel project dengan struktur folder yang benar sesuai PRD speci
 - Verify basic project structure
 
 ## ✔️ Acceptance Criteria
-- [ ] Laravel installed dengan `laravel new dompet-backend`
+- [ ] Laravel installed dengan `laravel new zaku-backend`
 - [ ] `.env` file configured dengan database credentials
 - [ ] Database connection verified (no connection errors)
 - [ ] `php artisan serve` runs successfully
@@ -51,16 +51,16 @@ Membuat fresh Laravel project dengan struktur folder yang benar sesuai PRD speci
 ### 2. Setup Environment
 - [ ] Copy `.env.example` ke `.env`
 - [ ] Generate APP_KEY dengan `php artisan key:generate`
-- [ ] Update APP_NAME ke "DOMPET Backend"
+- [ ] Update APP_NAME ke "Zaku Backend"
 - [ ] Update APP_URL ke http://localhost:8000
 
 ### 3. Configure Database
-- [ ] Create MySQL database named `dompet_db`
+- [ ] Create MySQL database named `zaku_db`
 - [ ] Update `.env` dengan database config:
   - DB_CONNECTION=mysql
   - DB_HOST=127.0.0.1
   - DB_PORT=3306
-  - DB_DATABASE=dompet_db
+  - DB_DATABASE=zaku_db
   - DB_USERNAME=[your_db_user]
   - DB_PASSWORD=[your_db_password]
 - [ ] Test database connection

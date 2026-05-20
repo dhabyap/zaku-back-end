@@ -1,8 +1,8 @@
 {
     "name": "dhabyap/zaku-back-end",
     "type": "project",
-    "description": "DOMPET Backend API built with Laravel.",
-    "keywords": ["dompet", "api", "laravel"],
+    "description": "Zaku Backend API built with Laravel.",
+    "keywords": ["zaku", "api", "laravel"],
     "license": "MIT",
     "require": {
         "php": "^8.1",

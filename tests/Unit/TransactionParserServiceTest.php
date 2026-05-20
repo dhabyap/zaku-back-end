@@ -18,7 +18,7 @@ class TransactionParserServiceTest extends TestCase
         $this->seed(\Database\Seeders\CategorySeeder::class);
     }
 
-    public function test_parser_handles_common_dompet_messages(): void
+    public function test_parser_handles_common_zaku_messages(): void
     {
         $parser = app(TransactionParserService::class);
 

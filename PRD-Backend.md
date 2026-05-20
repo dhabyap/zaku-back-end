@@ -1,7 +1,7 @@
-# PRD - DOMPET Backend API
+# PRD - Zaku Backend API
 ## Laravel REST API Server
 
-**Project Name:** DOMPET Backend API  
+**Project Name:** Zaku Backend API
 **Language:** PHP with Laravel Framework  
 **Database:** MySQL / PostgreSQL  
 **Authentication:** JWT (JSON Web Tokens) or Laravel Sanctum  
@@ -28,15 +28,15 @@
 
 ### Initial Setup Command
 ```bash
-laravel new dompet-backend
-cd dompet-backend
+laravel new zaku-backend
+cd zaku-backend
 composer require tymon/jwt-auth
 php artisan vendor:publish --provider="Tymon\JWTAuth\Providers\LaravelServiceProvider"
 ```
 
 ### Folder Structure
 ```
-/dompet-backend
+/zaku-backend
 ├── /app
 │   ├── /Http
 │   │   ├── /Controllers
@@ -87,22 +87,22 @@ php artisan vendor:publish --provider="Tymon\JWTAuth\Providers\LaravelServicePro
 
 ### Environment Configuration (.env)
 ```env
-APP_NAME="DOMPET Backend"
+APP_NAME="Zaku Backend"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://api.dompet.com
+APP_URL=https://api.zaku.com
 
 DB_CONNECTION=mysql
 DB_HOST=localhost
 DB_PORT=3306
-DB_DATABASE=dompet_db
-DB_USERNAME=dompet_user
+DB_DATABASE=zaku_db
+DB_USERNAME=zaku_user
 DB_PASSWORD=strong_password_here
 
 JWT_SECRET=your-jwt-secret-key-here
 JWT_ALGORITHM=HS256
 
-FRONTEND_URL=https://dompet.com
+FRONTEND_URL=https://zaku.com
 FRONTEND_URL_DEV=http://localhost:3000
 
 MAIL_MAILER=smtp
@@ -110,8 +110,8 @@ MAIL_HOST=smtp.mailtrap.io
 MAIL_PORT=465
 MAIL_USERNAME=your_username
 MAIL_PASSWORD=your_password
-MAIL_FROM_ADDRESS=noreply@dompet.com
-MAIL_FROM_NAME="DOMPET"
+MAIL_FROM_ADDRESS=noreply@zaku.com
+MAIL_FROM_NAME="Zaku"
 
 CACHE_DRIVER=redis
 QUEUE_CONNECTION=redis

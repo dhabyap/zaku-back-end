@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>DOMPET Backend API API Documentation</title>
+    <title>Zaku Backend API Documentation</title>
 
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 
@@ -163,7 +163,7 @@
     <div class="dark-box"></div>
     <div class="content">
         <h1 id="introduction">Introduction</h1>
-<p>Dokumentasi endpoint API untuk backend DOMPET/Zaku.</p>
+<p>Dokumentasi endpoint API untuk backend Zaku.</p>
 <aside>
     <strong>Base URL</strong>: <code>http://127.0.0.1:8000</code>
 </aside>

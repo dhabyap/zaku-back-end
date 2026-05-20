@@ -10,14 +10,14 @@ use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class DompetDemoSeeder extends Seeder
+class ZakuDemoSeeder extends Seeder
 {
     public function run(): void
     {
         $user = User::updateOrCreate(
-            ['email' => 'demo@dompet.test'],
+            ['email' => 'demo@zaku.test'],
             [
-                'full_name' => 'Demo DOMPET',
+                'full_name' => 'Demo Zaku',
                 'password' => Hash::make('password'),
                 'monthly_budget' => 3000000,
                 'phone_number' => '081234567890',

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: 'DOMPET Backend API API Documentation'
-  description: 'Dokumentasi endpoint API untuk backend DOMPET/Zaku.'
+  title: 'Zaku Backend API Documentation'
+  description: 'Dokumentasi endpoint API untuk backend Zaku.'
   version: 1.0.0
 servers:
   -

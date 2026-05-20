@@ -1,6 +1,6 @@
 # 📚 Documentation Guide
 
-Complete guide untuk understanding the documentation system di DOMPET Backend project.
+Complete guide untuk understanding the documentation system di Zaku Backend project.
 
 ---
 
@@ -145,7 +145,7 @@ TASK COMPLETE
 1. **Clone Project**
    ```bash
    git clone <repo-url>
-   cd dompet-backend
+   cd zaku-backend
    ```
 
 2. **Read Documentation** (in order)

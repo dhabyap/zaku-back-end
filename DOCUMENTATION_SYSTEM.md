@@ -1,4 +1,4 @@
-# 📚 Documentation System - DOMPET Backend
+# 📚 Documentation System - Zaku Backend
 
 ## Overview
 Sistem dokumentasi professional untuk track semua perubahan, keputusan, dan progress pengembangan backend. Mengikuti Git workflow standards.

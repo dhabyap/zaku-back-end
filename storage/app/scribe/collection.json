@@ -9,9 +9,9 @@
         }
     ],
     "info": {
-        "name": "DOMPET Backend API API Documentation",
+        "name": "Zaku Backend API Documentation",
         "_postman_id": "019fbd22-89be-4955-92da-f56f8f2d4184",
-        "description": "Dokumentasi endpoint API untuk backend DOMPET\/Zaku.",
+        "description": "Dokumentasi endpoint API untuk backend Zaku.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
     "item": [
