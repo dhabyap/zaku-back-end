@@ -68,6 +68,7 @@ class AuthController extends Controller
                 'password' => $request->string('password')->toString(),
                 'full_name' => $request->input('name', $request->input('full_name')),
                 'phone_number' => $request->input('phone_number'),
+                'is_verified' => true,
             ]);
 
             Wallet::create([
@@ -75,9 +76,6 @@ class AuthController extends Controller
                 'balance' => 0,
                 'status' => Wallet::STATUS_ACTIVE,
             ]);
-
-            $verificationCode = $this->createVerificationCode($user);
-            $this->sendVerificationEmail($user, $verificationCode->code);
 
             return $user->load('wallet');
         });
