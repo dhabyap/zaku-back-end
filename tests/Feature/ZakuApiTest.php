@@ -127,6 +127,14 @@ class ZakuApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.total_income', 5000000)
             ->assertJsonPath('data.total_expense', 65000)
+            ->assertJsonPath('data.net_cashflow', 4935000)
+            ->assertJsonPath('data.monthly_budget', 4000000)
+            ->assertJsonPath('data.budget_remaining', 3935000)
+            ->assertJsonPath('data.budget_used_percentage', 2)
+            ->assertJsonPath('data.budget_status', 'aman')
+            ->assertJsonPath('data.top_spending_category.name', 'MAKANAN')
+            ->assertJsonPath('data.top_spending_category.amount', 65000)
+            ->assertJsonPath('data.top_spending_category.percentage', 100)
             ->assertJsonCount(2, 'data.recent_transactions');
 
         $this->getJson('/api/transactions?filter=MAKANAN', $headers)
