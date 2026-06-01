@@ -6,6 +6,15 @@ use Illuminate\Validation\Rule;
 
 class TransactionRequest extends ApiFormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('category')) {
+            $this->merge([
+                'category' => strtoupper((string) $this->input('category')),
+            ]);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -14,12 +23,11 @@ class TransactionRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', Rule::in(['debit', 'credit'])],
-            'amount' => ['required', 'numeric', 'gt:0'],
+            'type' => ['required', Rule::in(['income', 'expense'])],
+            'amount' => ['required', 'integer', 'gt:0'],
             'description' => ['required', 'string', 'max:1000'],
-            'status' => ['sometimes', Rule::in(['pending', 'completed', 'failed'])],
+            'category' => ['required', 'string', 'exists:categories,name'],
             'transaction_date' => ['sometimes', 'date'],
-            'reference_id' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -28,27 +36,23 @@ class TransactionRequest extends ApiFormRequest
         return [
             'type' => [
                 'description' => 'Jenis transaksi.',
-                'example' => 'credit',
+                'example' => 'expense',
             ],
             'amount' => [
                 'description' => 'Nominal transaksi.',
-                'example' => 100000,
+                'example' => 65000,
             ],
             'description' => [
                 'description' => 'Deskripsi transaksi.',
-                'example' => 'Top up wallet',
+                'example' => 'Beli kopi',
             ],
-            'status' => [
-                'description' => 'Status transaksi.',
-                'example' => 'pending',
+            'category' => [
+                'description' => 'Nama kategori transaksi.',
+                'example' => 'MAKANAN',
             ],
             'transaction_date' => [
                 'description' => 'Tanggal transaksi.',
-                'example' => '2026-05-11 10:00:00',
-            ],
-            'reference_id' => [
-                'description' => 'ID referensi eksternal opsional.',
-                'example' => 'TRX-20260511-0001',
+                'example' => '2026-05-20',
             ],
         ];
     }

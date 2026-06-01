@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ChatTransactionRequest;
+use App\Http\Requests\TransactionRequest;
+use App\Models\Category;
 use App\Models\Transaction;
 use App\Services\AiTransactionParserService;
 use App\Services\DateLabelService;
@@ -18,6 +20,33 @@ use Illuminate\Support\Facades\DB;
 class TransactionController extends Controller
 {
     use ApiResponse;
+
+    public function store(TransactionRequest $request, TransactionService $transactions): JsonResponse
+    {
+        $category = Category::where('name', strtoupper($request->string('category')->toString()))->firstOrFail();
+
+        $transaction = $transactions->create(
+            $request->user(),
+            $category,
+            $request->string('type')->toString(),
+            $request->integer('amount'),
+            $request->string('description')->toString(),
+            Transaction::SOURCE_MANUAL,
+            null,
+            $request->input('transaction_date'),
+        );
+
+        return $this->successResponse([
+            'id' => $transaction->id,
+            'description' => $transaction->description,
+            'amount' => (int) $transaction->amount,
+            'type' => $transaction->type,
+            'category_name' => $transaction->category?->name ?? 'LAINNYA',
+            'category_icon' => $transaction->category?->icon ?? 'ðŸ“Œ',
+            'date_formatted' => DateLabelService::date($transaction->transaction_date),
+            'source' => $transaction->source,
+        ], 'Transaksi berhasil dicatat', 201);
+    }
 
     public function show(Request $request, int $id): JsonResponse
     {
@@ -123,6 +152,8 @@ class TransactionController extends Controller
     {
         $filter = strtoupper((string) $request->query('filter', 'SEMUA'));
         $query = $this->baseQuery($request)->with('category');
+        $limit = max(1, min((int) $request->query('limit', 100), 100));
+        $page = max(1, (int) $request->query('page', 1));
 
         if ($filter === 'PEMASUKAN') {
             $query->where('type', Transaction::TYPE_INCOME);
@@ -132,8 +163,13 @@ class TransactionController extends Controller
             $query->whereHas('category', fn (Builder $query) => $query->whereRaw('UPPER(name) = ?', [$filter]));
         }
 
-        $groups = $query->latest('transaction_date')
+        $total = (clone $query)->count();
+        $transactions = $query->latest('transaction_date')
+            ->forPage($page, $limit)
             ->get()
+            ->values();
+
+        $groups = $transactions
             ->groupBy(fn (Transaction $transaction) => DateLabelService::month($transaction->transaction_date))
             ->map(fn ($transactions, string $monthLabel) => [
                 'month_label' => $monthLabel,
@@ -151,7 +187,15 @@ class TransactionController extends Controller
             ->values()
             ->all();
 
-        return $this->successResponse($groups, 'Riwayat transaksi berhasil diambil');
+        return $this->successResponse([
+            'groups' => $groups,
+            'meta' => [
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'has_more' => ($page * $limit) < $total,
+            ],
+        ], 'Riwayat transaksi berhasil diambil');
     }
 
     public function chat(

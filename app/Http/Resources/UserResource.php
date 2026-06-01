@@ -14,7 +14,6 @@ class UserResource extends JsonResource
             'name' => $this->full_name,
             'email' => $this->email,
             'avatar_initial' => strtoupper(substr((string) $this->full_name, 0, 1)),
-            'wallet' => new WalletResource($this->whenLoaded('wallet')),
         ];
     }
 }

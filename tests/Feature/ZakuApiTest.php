@@ -7,6 +7,8 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
@@ -38,9 +40,25 @@ class ZakuApiTest extends TestCase
 
         $register->assertCreated()
             ->assertJsonPath('success', true)
+            ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.user.name', 'Budi Santoso')
             ->assertJsonPath('data.user.avatar_initial', 'B')
             ->assertJsonStructure(['data' => ['token']]);
+
+        $this->postJson('/api/auth/login', [
+            'email' => 'budi@example.com',
+            'password' => 'password123',
+        ])->assertForbidden()
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'Email address is not verified.');
+
+        $code = \App\Models\VerificationCode::whereHas('user', fn ($query) => $query->where('email', 'budi@example.com'))->firstOrFail();
+
+        $this->postJson('/api/auth/verify-email', [
+            'email' => 'budi@example.com',
+            'code' => $code->code,
+        ])->assertOk()
+            ->assertJsonPath('status', 'success');
 
         $login = $this->postJson('/api/auth/login', [
             'email' => 'budi@example.com',
@@ -49,6 +67,7 @@ class ZakuApiTest extends TestCase
 
         $login->assertOk()
             ->assertJsonPath('success', true)
+            ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.user.email', 'budi@example.com');
 
         $this->postJson('/api/auth/login', [
@@ -108,12 +127,21 @@ class ZakuApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.total_income', 5000000)
             ->assertJsonPath('data.total_expense', 65000)
+            ->assertJsonPath('data.net_cashflow', 4935000)
+            ->assertJsonPath('data.monthly_budget', 4000000)
+            ->assertJsonPath('data.budget_remaining', 3935000)
+            ->assertJsonPath('data.budget_used_percentage', 2)
+            ->assertJsonPath('data.budget_status', 'aman')
+            ->assertJsonPath('data.top_spending_category.name', 'MAKANAN')
+            ->assertJsonPath('data.top_spending_category.amount', 65000)
+            ->assertJsonPath('data.top_spending_category.percentage', 100)
             ->assertJsonCount(2, 'data.recent_transactions');
 
         $this->getJson('/api/transactions?filter=MAKANAN', $headers)
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.0.transactions.0.category_name', 'MAKANAN');
+            ->assertJsonPath('data.groups.0.transactions.0.category_name', 'MAKANAN')
+            ->assertJsonPath('data.meta.total', 1);
 
         $this->postJson('/api/transactions/chat', [
             'message' => 'Beli kopi di Starbucks 65 ribu',
@@ -226,16 +254,12 @@ class ZakuApiTest extends TestCase
         Http::assertSentCount(3);
     }
 
-    public function test_frontend_gap_transaction_and_wallet_endpoints(): void
+    public function test_transaction_tracking_endpoints_follow_zaku_scope(): void
     {
         $user = User::factory()->create([
             'email' => 'sender@example.com',
         ]);
-        $recipient = User::factory()->create([
-            'email' => 'recipient@example.com',
-        ]);
         $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 1000000, 'status' => Wallet::STATUS_ACTIVE]);
-        Wallet::create(['user_id' => $recipient->id, 'balance' => 250000, 'status' => Wallet::STATUS_ACTIVE]);
         $food = Category::where('name', 'MAKANAN')->firstOrFail();
 
         $transaction = Transaction::create([
@@ -250,6 +274,19 @@ class ZakuApiTest extends TestCase
         ]);
 
         $headers = $this->authHeaders($user);
+
+        $this->postJson('/api/transactions', [
+            'type' => 'income',
+            'amount' => 250000,
+            'description' => 'Fee konsultasi',
+            'category' => 'GAJI',
+            'transaction_date' => now()->toDateString(),
+        ], $headers)
+            ->assertCreated()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.type', 'income')
+            ->assertJsonPath('data.amount', 250000)
+            ->assertJsonPath('data.category_name', 'GAJI');
 
         $this->getJson("/api/transactions/{$transaction->id}", $headers)
             ->assertOk()
@@ -280,79 +317,112 @@ class ZakuApiTest extends TestCase
 
         $this->getJson('/api/transactions/stats', $headers)
             ->assertOk()
-            ->assertJsonPath('data.total', 1)
-            ->assertJsonPath('data.biggest', 35000)
-            ->assertJsonPath('data.categories', 1);
+            ->assertJsonPath('data.total', 2)
+            ->assertJsonPath('data.biggest', 250000)
+            ->assertJsonPath('data.categories', 2);
 
         $this->getJson('/api/transactions/categories', $headers)
             ->assertOk()
             ->assertJsonPath('data.0.name', 'MAKANAN')
             ->assertJsonPath('data.0.amount', 35000);
 
-        $this->getJson('/api/wallet/balance', $headers)
+        $this->getJson('/api/transactions?limit=1', $headers)
             ->assertOk()
-            ->assertJsonPath('data.balance', 1000000)
-            ->assertJsonPath('data.total_expense', 35000);
+            ->assertJsonCount(1, 'data.groups.0.transactions')
+            ->assertJsonPath('data.meta.limit', 1)
+            ->assertJsonPath('data.meta.has_more', true);
 
-        $this->postJson('/api/wallet/topup', ['amount' => 100000], $headers)
-            ->assertOk()
-            ->assertJsonPath('data.balance', 1100000)
-            ->assertJsonPath('data.message', 'Top up berhasil.');
-
-        $this->postJson('/api/wallet/topup', ['amount' => 0], $headers)
-            ->assertStatus(422)
-            ->assertJsonPath('success', false);
-
-        $this->postJson('/api/wallet/withdraw', [
-            'amount' => 200000,
-            'account_number' => '1234567890',
-        ], $headers)
-            ->assertOk()
-            ->assertJsonPath('data.balance', 900000)
-            ->assertJsonPath('data.message', 'Penarikan berhasil diproses.');
-
-        $this->postJson('/api/wallet/send', [
-            'recipient_email' => 'recipient@example.com',
-            'amount' => 50000,
-            'note' => 'opsional',
-        ], $headers)
-            ->assertOk()
-            ->assertJsonPath('data.balance', 850000)
-            ->assertJsonPath('data.message', 'Uang berhasil dikirim.');
-
-        $this->postJson('/api/wallet/send', [
-            'recipient_email' => 'missing@example.com',
-            'amount' => 50000,
-        ], $headers)
-            ->assertStatus(422)
-            ->assertJsonPath('success', false);
-
-        $this->postJson('/api/wallet/send', [
-            'recipient_email' => 'recipient@example.com',
-            'amount' => 999999999,
-        ], $headers)
-            ->assertStatus(422)
-            ->assertJsonPath('success', false);
-
-        $this->postJson('/api/wallet/withdraw', [
-            'amount' => 999999999,
-            'account_number' => '1234567890',
-        ], $headers)
-            ->assertStatus(422)
-            ->assertJsonPath('success', false);
+        $this->getJson('/api/wallet/balance', $headers)->assertNotFound();
+        $this->postJson('/api/wallet/topup', ['amount' => 100000], $headers)->assertNotFound();
+        $this->postJson('/api/wallet/withdraw', ['amount' => 200000], $headers)->assertNotFound();
+        $this->postJson('/api/wallet/send', ['amount' => 50000], $headers)->assertNotFound();
 
         $this->deleteJson("/api/transactions/{$transaction->id}", [], $headers)
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.id', $transaction->id)
-            ->assertJsonPath('data.balance', 885000);
+            ->assertJsonPath('data.balance', 1285000);
 
         $this->assertDatabaseMissing('transactions', [
             'id' => $transaction->id,
         ]);
 
         $wallet->refresh();
-        $this->assertSame('885000.00', $wallet->balance);
+        $this->assertSame('1285000.00', $wallet->balance);
+    }
+
+    public function test_password_reset_contract_resets_password_and_deletes_token(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'reset@example.com',
+            'password' => Hash::make('old-password'),
+        ]);
+        $token = 'plain-reset-token';
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => $user->email,
+            'token' => Hash::make($token),
+            'created_at' => now(),
+        ]);
+
+        $this->postJson('/api/auth/reset-password', [
+            'email' => $user->email,
+            'token' => $token,
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('message', 'Password has been reset successfully');
+
+        $this->assertDatabaseMissing('password_reset_tokens', [
+            'email' => $user->email,
+        ]);
+
+        $this->postJson('/api/auth/login', [
+            'email' => $user->email,
+            'password' => 'new-password',
+        ])->assertOk()
+            ->assertJsonPath('status', 'success');
+    }
+
+    public function test_password_reset_rejects_invalid_and_expired_tokens(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'expired-reset@example.com',
+        ]);
+
+        $this->postJson('/api/auth/reset-password', [
+            'email' => $user->email,
+            'token' => 'missing-token',
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertStatus(422)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'Invalid password reset token.');
+
+        DB::table('password_reset_tokens')->insert([
+            'email' => $user->email,
+            'token' => Hash::make('expired-token'),
+            'created_at' => now()->subMinutes(120),
+        ]);
+
+        $this->postJson('/api/auth/reset-password', [
+            'email' => $user->email,
+            'token' => 'expired-token',
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertStatus(422)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'Password reset token has expired.');
+
+        $this->postJson('/api/auth/reset-password', [
+            'email' => $user->email,
+            'token' => 'expired-token',
+            'password' => 'short',
+            'password_confirmation' => 'different',
+        ])->assertStatus(422)
+            ->assertJsonPath('status', 'error')
+            ->assertJsonPath('message', 'Validation failed');
     }
 
     public function test_dashboard_does_not_fail_when_categories_table_is_missing(): void

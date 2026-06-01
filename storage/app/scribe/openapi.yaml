@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: 'Zaku Backend API Documentation'
+  title: 'DOMPET Backend API API Documentation'
   description: 'Dokumentasi endpoint API untuk backend Zaku.'
   version: 1.0.0
 servers:
@@ -27,7 +27,7 @@ paths:
     post:
       summary: 'Register user'
       operationId: registerUser
-      description: 'Membuat user baru, wallet default, kode verifikasi email, dan JWT token.'
+      description: 'Membuat user baru, ledger internal, kode verifikasi email, dan JWT token.'
       parameters: []
       responses:
         201:
@@ -44,14 +44,7 @@ paths:
                       id: 1
                       full_name: 'John Doe'
                       email: user@example.com
-                      phone_number: '08123456789'
-                      is_verified: false
-                      last_login_at: null
-                      wallet:
-                        id: 1
-                        user_id: 1
-                        balance: '0.00'
-                        status: active
+                      avatar_initial: J
                     token: jwt_token_here
                 properties:
                   status:
@@ -75,31 +68,9 @@ paths:
                           email:
                             type: string
                             example: user@example.com
-                          phone_number:
+                          avatar_initial:
                             type: string
-                            example: '08123456789'
-                          is_verified:
-                            type: boolean
-                            example: false
-                          last_login_at:
-                            type: string
-                            example: null
-                            nullable: true
-                          wallet:
-                            type: object
-                            properties:
-                              id:
-                                type: integer
-                                example: 1
-                              user_id:
-                                type: integer
-                                example: 1
-                              balance:
-                                type: string
-                                example: '0.00'
-                              status:
-                                type: string
-                                example: active
+                            example: J
                       token:
                         type: string
                         example: jwt_token_here
@@ -544,6 +515,39 @@ paths:
                     example: 'Successfully logged out'
       tags:
         - Authentication
+  /api/auth/reset-password:
+    post:
+      summary: ''
+      operationId: postApiAuthResetPassword
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'Email user yang meminta reset password. Must be a valid email address.'
+                  example: user@example.com
+                token:
+                  type: string
+                  description: 'Token reset password dari email atau log.'
+                  example: reset-token
+                password:
+                  type: string
+                  description: 'Password baru minimal 8 karakter. Must be at least 8 characters.'
+                  example: password123
+              required:
+                - email
+                - token
+                - password
+      security: []
   /api/user/profile:
     get:
       summary: ''
@@ -660,6 +664,50 @@ paths:
       tags:
         - API
       security: []
+    post:
+      summary: ''
+      operationId: postApiTransactions
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: 'Jenis transaksi.'
+                  example: expense
+                  enum:
+                    - income
+                    - expense
+                amount:
+                  type: integer
+                  description: 'Nominal transaksi.'
+                  example: 65000
+                description:
+                  type: string
+                  description: 'Deskripsi transaksi. Must not be greater than 1000 characters.'
+                  example: 'Beli kopi'
+                category:
+                  type: string
+                  description: 'Nama kategori transaksi. The <code>name</code> of an existing record in the categories table.'
+                  example: MAKANAN
+                transaction_date:
+                  type: string
+                  description: 'Tanggal transaksi. Must be a valid date.'
+                  example: '2026-05-20'
+              required:
+                - type
+                - amount
+                - description
+                - category
+      security: []
   /api/transactions/stats:
     get:
       summary: ''
@@ -704,6 +752,29 @@ paths:
       tags:
         - API
       security: []
+  /api/ai/chat:
+    post:
+      summary: ''
+      operationId: postApiAiChat
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: 'Input teks natural language untuk dicatat sebagai transaksi. Must be at least 3 characters. Must not be greater than 500 characters.'
+                  example: 'Beli kopi di Starbucks 65 ribu'
+              required:
+                - message
+      security: []
   '/api/transactions/{id}':
     get:
       summary: ''
@@ -723,6 +794,15 @@ paths:
                   message:
                     type: string
                     example: 'Token not provided'
+      tags:
+        - API
+      security: []
+    delete:
+      summary: ''
+      operationId: deleteApiTransactionsId
+      description: ''
+      parameters: []
+      responses: {  }
       tags:
         - API
       security: []
@@ -757,110 +837,4 @@ paths:
                   example: 'Beli kopi di Starbucks 65 ribu'
               required:
                 - message
-      security: []
-  /api/wallet/balance:
-    get:
-      summary: ''
-      operationId: getApiWalletBalance
-      description: ''
-      parameters: []
-      responses:
-        401:
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                example:
-                  message: 'Token not provided'
-                properties:
-                  message:
-                    type: string
-                    example: 'Token not provided'
-      tags:
-        - API
-      security: []
-  /api/wallet/topup:
-    post:
-      summary: ''
-      operationId: postApiWalletTopup
-      description: ''
-      parameters: []
-      responses: {  }
-      tags:
-        - API
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                amount:
-                  type: integer
-                  description: 'Nominal transaksi wallet dalam integer IDR. Must be at least 1.'
-                  example: 100000
-              required:
-                - amount
-      security: []
-  /api/wallet/withdraw:
-    post:
-      summary: ''
-      operationId: postApiWalletWithdraw
-      description: ''
-      parameters: []
-      responses: {  }
-      tags:
-        - API
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                amount:
-                  type: integer
-                  description: 'Nominal transaksi wallet dalam integer IDR. Must be at least 1.'
-                  example: 100000
-                account_number:
-                  type: string
-                  description: 'Nomor rekening tujuan penarikan. Must not be greater than 50 characters.'
-                  example: '1234567890'
-              required:
-                - amount
-                - account_number
-      security: []
-  /api/wallet/send:
-    post:
-      summary: ''
-      operationId: postApiWalletSend
-      description: ''
-      parameters: []
-      responses: {  }
-      tags:
-        - API
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                amount:
-                  type: integer
-                  description: 'Nominal transaksi wallet dalam integer IDR. Must be at least 1.'
-                  example: 100000
-                recipient_email:
-                  type: string
-                  description: 'Email penerima yang sudah terdaftar. Must be a valid email address. The <code>email</code> of an existing record in the users table. Must not be one of <code></code>.'
-                  example: user@email.com
-                note:
-                  type: string
-                  description: 'Catatan transfer opsional. Must not be greater than 255 characters.'
-                  example: opsional
-                  nullable: true
-              required:
-                - amount
-                - recipient_email
       security: []

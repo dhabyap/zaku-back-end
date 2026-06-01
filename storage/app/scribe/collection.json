@@ -9,8 +9,8 @@
         }
     ],
     "info": {
-        "name": "Zaku Backend API Documentation",
-        "_postman_id": "019fbd22-89be-4955-92da-f56f8f2d4184",
+        "name": "DOMPET Backend API API Documentation",
+        "_postman_id": "d3112082-4f74-4acd-aa57-445112169cd7",
         "description": "Dokumentasi endpoint API untuk backend Zaku.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -43,7 +43,7 @@
                             "mode": "raw",
                             "raw": "{\"email\":\"user@example.com\",\"password\":\"password123\",\"name\":\"vmqeopfuudtdsufvyvddq\",\"full_name\":\"John Doe\",\"phone_number\":\"08123456789\"}"
                         },
-                        "description": "Membuat user baru, wallet default, kode verifikasi email, dan JWT token.",
+                        "description": "Membuat user baru, ledger internal, kode verifikasi email, dan JWT token.",
                         "auth": {
                             "type": "noauth"
                         }
@@ -52,7 +52,7 @@
                         {
                             "header": [],
                             "code": 201,
-                            "body": "{\n  \"status\": \"success\",\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"full_name\": \"John Doe\",\n      \"email\": \"user@example.com\",\n      \"phone_number\": \"08123456789\",\n      \"is_verified\": false,\n      \"last_login_at\": null,\n      \"wallet\": {\n        \"id\": 1,\n        \"user_id\": 1,\n        \"balance\": \"0.00\",\n        \"status\": \"active\"\n      }\n    },\n    \"token\": \"jwt_token_here\"\n  }\n}",
+                            "body": "{\n  \"status\": \"success\",\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": 1,\n      \"full_name\": \"John Doe\",\n      \"email\": \"user@example.com\",\n      \"avatar_initial\": \"J\"\n    },\n    \"token\": \"jwt_token_here\"\n  }\n}",
                             "name": ""
                         }
                     ]
@@ -371,6 +371,37 @@
             "description": "",
             "item": [
                 {
+                    "name": "POST api\/auth\/reset-password",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/auth\/reset-password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/auth\/reset-password"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"email\":\"user@example.com\",\"token\":\"reset-token\",\"password\":\"password123\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
                     "name": "GET api\/user\/profile",
                     "request": {
                         "url": {
@@ -420,8 +451,8 @@
                                     "value": "59"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "*"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -542,8 +573,8 @@
                                     "value": "58"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "*"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -602,8 +633,8 @@
                                     "value": "57"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "*"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -611,6 +642,37 @@
                             "name": ""
                         }
                     ]
+                },
+                {
+                    "name": "POST api\/transactions",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/transactions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/transactions"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"type\":\"expense\",\"amount\":65000,\"description\":\"Beli kopi\",\"category\":\"MAKANAN\",\"transaction_date\":\"2026-05-20\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
                 },
                 {
                     "name": "GET api\/transactions\/stats",
@@ -662,8 +724,8 @@
                                     "value": "56"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "*"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -722,8 +784,8 @@
                                     "value": "55"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "*"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -731,6 +793,37 @@
                             "name": ""
                         }
                     ]
+                },
+                {
+                    "name": "POST api\/ai\/chat",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/ai\/chat",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/ai\/chat"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"message\":\"Beli kopi di Starbucks 65 ribu\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
                 },
                 {
                     "name": "GET api\/transactions\/{id}",
@@ -790,8 +883,8 @@
                                     "value": "54"
                                 },
                                 {
-                                    "key": "access-control-allow-origin",
-                                    "value": "*"
+                                    "key": "vary",
+                                    "value": "Origin"
                                 }
                             ],
                             "code": 401,
@@ -799,6 +892,42 @@
                             "name": ""
                         }
                     ]
+                },
+                {
+                    "name": "DELETE api\/transactions\/{id}",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/transactions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/transactions\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "consequatur",
+                                    "description": "The ID of the transaction."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
                 },
                 {
                     "name": "POST api\/transactions\/chat",
@@ -823,159 +952,6 @@
                         "body": {
                             "mode": "raw",
                             "raw": "{\"message\":\"Beli kopi di Starbucks 65 ribu\"}"
-                        },
-                        "description": "",
-                        "auth": {
-                            "type": "noauth"
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "GET api\/wallet\/balance",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/wallet\/balance",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/wallet\/balance"
-                        },
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": null,
-                        "description": "",
-                        "auth": {
-                            "type": "noauth"
-                        }
-                    },
-                    "response": [
-                        {
-                            "header": [
-                                {
-                                    "key": "www-authenticate",
-                                    "value": "jwt-auth"
-                                },
-                                {
-                                    "key": "cache-control",
-                                    "value": "no-cache, private"
-                                },
-                                {
-                                    "key": "content-type",
-                                    "value": "application\/json"
-                                },
-                                {
-                                    "key": "x-ratelimit-limit",
-                                    "value": "60"
-                                },
-                                {
-                                    "key": "x-ratelimit-remaining",
-                                    "value": "53"
-                                },
-                                {
-                                    "key": "access-control-allow-origin",
-                                    "value": "*"
-                                }
-                            ],
-                            "code": 401,
-                            "body": "{\n    \"message\": \"Token not provided\"\n}",
-                            "name": ""
-                        }
-                    ]
-                },
-                {
-                    "name": "POST api\/wallet\/topup",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/wallet\/topup",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/wallet\/topup"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"amount\":100000}"
-                        },
-                        "description": "",
-                        "auth": {
-                            "type": "noauth"
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "POST api\/wallet\/withdraw",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/wallet\/withdraw",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/wallet\/withdraw"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"amount\":100000,\"account_number\":\"1234567890\"}"
-                        },
-                        "description": "",
-                        "auth": {
-                            "type": "noauth"
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "POST api\/wallet\/send",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/wallet\/send",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/wallet\/send"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"amount\":100000,\"recipient_email\":\"user@email.com\",\"note\":\"opsional\"}"
                         },
                         "description": "",
                         "auth": {

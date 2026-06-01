@@ -15,7 +15,7 @@ endpoints:
       subgroup: ''
       subgroupDescription: ''
       title: 'Register user'
-      description: 'Membuat user baru, wallet default, kode verifikasi email, dan JWT token.'
+      description: 'Membuat user baru, ledger internal, kode verifikasi email, dan JWT token.'
       authenticated: false
       deprecated: false
     headers:
@@ -101,15 +101,7 @@ endpoints:
                 "id": 1,
                 "full_name": "John Doe",
                 "email": "user@example.com",
-                "phone_number": "08123456789",
-                "is_verified": false,
-                "last_login_at": null,
-                "wallet": {
-                  "id": 1,
-                  "user_id": 1,
-                  "balance": "0.00",
-                  "status": "active"
-                }
+                "avatar_initial": "J"
               },
               "token": "jwt_token_here"
             }
