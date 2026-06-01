@@ -119,25 +119,45 @@ class TransactionController extends Controller
 
     public function categories(Request $request): JsonResponse
     {
-        $totalExpense = (int) $this->baseQuery($request)
+        $month = $request->query('month');
+
+        if ($month === null) {
+            $start = now()->startOfMonth();
+            $end = now()->endOfMonth();
+        } else {
+            if (! preg_match('/^[0-9]{4}-(0[1-9]|1[0-2])$/', $month)) {
+                return $this->errorResponse('Format month harus YYYY-MM', 422, [
+                    'month' => ['The month must be in format YYYY-MM.'],
+                ]);
+            }
+
+            $start = \Carbon\Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+            $end = \Carbon\Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+        }
+
+        $query = $this->baseQuery($request)
+            ->with('category')
             ->where('type', Transaction::TYPE_EXPENSE)
-            ->sum('amount');
+            ->whereBetween('transaction_date', [$start, $end]);
+
+        $totalExpense = (int) (clone $query)->sum('amount');
 
         if ($totalExpense <= 0) {
             return $this->successResponse([], 'Ringkasan kategori berhasil diambil');
         }
 
-        $categories = $this->baseQuery($request)
-            ->with('category')
-            ->where('type', Transaction::TYPE_EXPENSE)
-            ->get()
+        $categories = $query->get()
             ->groupBy(fn (Transaction $transaction) => $transaction->category?->name ?? 'LAINNYA')
             ->map(function ($transactions, string $name) use ($totalExpense) {
                 $amount = (int) $transactions->sum('amount');
+                $count = $transactions->count();
 
                 return [
                     'name' => $name,
+                    'icon' => $transactions->first()->category?->icon ?? '📌',
                     'amount' => $amount,
+                    'transaction_count' => $count,
+                    'percentage' => (int) round(($amount / $totalExpense) * 100),
                     'pct' => (int) round(($amount / $totalExpense) * 100),
                 ];
             })
