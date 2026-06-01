@@ -38,6 +38,7 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
     Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::get('/insights', [\App\Http\Controllers\Api\InsightController::class, 'index']);
     Route::post('/transactions', [TransactionController::class, 'store']);
     Route::get('/transactions/stats', [TransactionController::class, 'stats']);
     Route::get('/transactions/categories', [TransactionController::class, 'categories']);

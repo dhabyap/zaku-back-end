@@ -254,6 +254,59 @@ class ZakuApiTest extends TestCase
         Http::assertSentCount(3);
     }
 
+    public function test_insights_returns_budget_warning_when_budget_exceeds_threshold(): void
+    {
+        $user = User::factory()->create([
+            'full_name' => 'Insight User',
+            'email' => 'insight@example.com',
+            'monthly_budget' => 100000,
+        ]);
+
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
+
+        $food = Category::where('name', 'MAKANAN')->first();
+
+        // create expenses totaling 85% of budget
+        Transaction::create([
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 50000,
+            'description' => 'Big meal',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        Transaction::create([
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 35000,
+            'description' => 'Snack',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        $this->getJson('/api/insights', $this->authHeaders($user))
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJson(fn ($json) =>
+                $json->whereType('data', 'array')
+            )
+            ->assertJson(fn ($json) =>
+                $json->has('data')
+            );
+
+        $body = $this->getJson('/api/insights', $this->authHeaders($user))->json('data');
+
+        $this->assertNotEmpty($body);
+
+        $types = array_column($body, 'type');
+        $this->assertContains('budget_risk', $types);
+    }
+
     public function test_transaction_tracking_endpoints_follow_zaku_scope(): void
     {
         $user = User::factory()->create([
