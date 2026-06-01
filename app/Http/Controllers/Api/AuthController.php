@@ -122,7 +122,7 @@ class AuthController extends Controller
             return $this->unauthorizedResponse('Invalid credentials.');
         }
 
-        if (! $user->isVerified()) {
+        if (! $user->isVerified() || $user->verification_code) {
             return $this->forbiddenResponse('Email address is not verified.');
         }
 
