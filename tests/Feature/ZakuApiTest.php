@@ -254,6 +254,54 @@ class ZakuApiTest extends TestCase
         Http::assertSentCount(3);
     }
 
+    public function test_insights_returns_budget_warning_when_budget_exceeds_threshold(): void
+    {
+        $user = User::factory()->create([
+            'full_name' => 'Insight User',
+            'email' => 'insight@example.com',
+            'monthly_budget' => 100000,
+        ]);
+
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
+
+        $food = Category::where('name', 'MAKANAN')->first();
+
+        // create expenses totaling 85% of budget
+        Transaction::create([
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 50000,
+            'description' => 'Big meal',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        Transaction::create([
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 35000,
+            'description' => 'Snack',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        $response = $this->getJson('/api/insights', $this->authHeaders($user))
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure(['data']);
+
+        $body = $response->json('data');
+
+        $this->assertNotEmpty($body);
+
+        $types = array_column($body, 'type');
+        $this->assertContains('budget_risk', $types);
+    }
+
     public function test_transaction_tracking_endpoints_follow_zaku_scope(): void
     {
         $user = User::factory()->create([
@@ -349,6 +397,89 @@ class ZakuApiTest extends TestCase
 
         $wallet->refresh();
         $this->assertSame('1285000.00', $wallet->balance);
+    }
+
+    public function test_update_transaction_description_only(): void
+    {
+        $user = User::factory()->create();
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 100000, 'status' => Wallet::STATUS_ACTIVE]);
+        $food = Category::where('name', 'MAKANAN')->firstOrFail();
+
+        $transaction = Transaction::create([
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 35000,
+            'description' => 'Old description',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        $headers = $this->authHeaders($user);
+
+        $this->putJson("/api/transactions/{$transaction->id}", [
+            'description' => 'New description',
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('data.description', 'New description');
+    }
+
+    public function test_update_expense_amount_adjusts_wallet_balance(): void
+    {
+        $user = User::factory()->create();
+        // wallet balance already reflects original expense of 50000 (starting from 1000000)
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 950000, 'status' => Wallet::STATUS_ACTIVE]);
+        $food = Category::where('name', 'MAKANAN')->firstOrFail();
+
+        $transaction = Transaction::create([
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 50000,
+            'description' => 'Lunch',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        $headers = $this->authHeaders($user);
+
+        $this->putJson("/api/transactions/{$transaction->id}", [
+            'amount' => 100000,
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('data.amount', 100000);
+
+        $wallet->refresh();
+        $this->assertSame('900000.00', $wallet->balance);
+    }
+
+    public function test_user_cannot_update_other_users_transaction(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $wallet = Wallet::create(['user_id' => $other->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
+        $food = Category::where('name', 'MAKANAN')->firstOrFail();
+
+        $transaction = Transaction::create([
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 10000,
+            'description' => 'Other user tx',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        $headers = $this->authHeaders($user);
+
+        $this->putJson("/api/transactions/{$transaction->id}", [
+            'description' => 'Attempted update',
+        ], $headers)
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
     }
 
     public function test_password_reset_contract_resets_password_and_deletes_token(): void
