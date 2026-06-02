@@ -9,6 +9,7 @@ use App\Services\AiTransactionParserService;
 use App\Services\DateLabelService;
 use App\Services\TransactionParserService;
 use App\Services\TransactionService;
+use App\Http\Requests\UpdateTransactionRequest;
 use App\Traits\ApiResponse;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -188,6 +189,42 @@ class TransactionController extends Controller
                 'type' => $transaction->type,
             ],
         ], 'Transaksi berhasil dicatat', 201);
+    }
+
+    public function update(UpdateTransactionRequest $request, int $id, TransactionService $transactions): JsonResponse
+    {
+        $transaction = $this->baseQuery($request)
+            ->with('wallet', 'category')
+            ->find($id);
+
+        if (! $transaction) {
+            return $this->notFoundResponse('Transaction not found.');
+        }
+
+        $category = null;
+        if ($request->has('category')) {
+            $category = Category::where('name', strtoupper($request->string('category')->toString()))->firstOrFail();
+        }
+
+        $updated = $transactions->update(
+            $transaction,
+            $category,
+            $request->input('type'),
+            $request->input('amount'),
+            $request->input('description'),
+            $request->input('transaction_date'),
+        );
+
+        return $this->successResponse([
+            'id' => $updated->id,
+            'description' => $updated->description,
+            'amount' => (int) $updated->amount,
+            'type' => $updated->type,
+            'category_name' => $updated->category?->name ?? 'LAINNYA',
+            'category_icon' => $updated->category?->icon ?? 'ðŸ“Œ',
+            'date_formatted' => DateLabelService::date($updated->transaction_date),
+            'source' => $updated->source,
+        ], 'Transaksi berhasil diperbarui');
     }
 
     public function aiChat(

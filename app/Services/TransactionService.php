@@ -48,4 +48,60 @@ class TransactionService
             return $transaction->load('category');
         });
     }
+
+    public function update(
+        Transaction $transaction,
+        ?Category $category,
+        ?string $type,
+        ?int $amount,
+        ?string $description,
+        ?string $transactionDate,
+    ): Transaction {
+        return DB::transaction(function () use ($transaction, $category, $type, $amount, $description, $transactionDate) {
+            $wallet = $transaction->wallet;
+
+            $oldAmount = (int) $transaction->amount;
+            $oldType = $transaction->type;
+
+            $newType = $type ?? $oldType;
+            $newAmount = $amount ?? $oldAmount;
+
+            // If amount or type changed, revert old transaction effect first
+            if ($newAmount !== $oldAmount || $newType !== $oldType) {
+                if ($oldType === Transaction::TYPE_INCOME) {
+                    $wallet->balance = number_format(((float) $wallet->balance) - $oldAmount, 2, '.', '');
+                } else {
+                    $wallet->balance = number_format(((float) $wallet->balance) + $oldAmount, 2, '.', '');
+                }
+                $wallet->save();
+            }
+
+            $transaction->category_id = $category?->id ?? $transaction->category_id;
+            $transaction->type = $newType;
+            $transaction->amount = $newAmount;
+
+            if ($description !== null) {
+                $transaction->description = $description;
+            }
+
+            if ($transactionDate !== null) {
+                $transaction->transaction_date = $transactionDate;
+            }
+
+            $transaction->save();
+
+            // Apply new transaction effect if changed
+            if ($newAmount !== $oldAmount || $newType !== $oldType) {
+                if ($newType === Transaction::TYPE_INCOME) {
+                    $wallet->balance = number_format(((float) $wallet->balance) + $newAmount, 2, '.', '');
+                } else {
+                    $wallet->balance = number_format(((float) $wallet->balance) - $newAmount, 2, '.', '');
+                }
+
+                $wallet->save();
+            }
+
+            return $transaction->load('category');
+        });
+    }
 }
