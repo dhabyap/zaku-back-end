@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Validation\Rule;
 
-class TransactionRequest extends ApiFormRequest
+class UpdateTransactionRequest extends ApiFormRequest
 {
     protected function prepareForValidation(): void
     {
@@ -23,10 +23,10 @@ class TransactionRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', Rule::in(['income', 'expense'])],
-            'amount' => ['required', 'integer', 'gt:0'],
-            'description' => ['required', 'string', 'max:1000'],
-            'category' => ['required', 'string', 'exists:categories,name'],
+            'type' => ['sometimes', Rule::in(['income', 'expense'])],
+            'amount' => ['sometimes', 'integer', 'gt:0'],
+            'description' => ['sometimes', 'string', 'max:1000'],
+            'category' => ['sometimes', 'string', 'exists:categories,name'],
             'transaction_date' => ['sometimes', 'date'],
         ];
     }
@@ -40,11 +40,11 @@ class TransactionRequest extends ApiFormRequest
             ],
             'amount' => [
                 'description' => 'Nominal transaksi.',
-                'example' => 65000,
+                'example' => 50000,
             ],
             'description' => [
                 'description' => 'Deskripsi transaksi.',
-                'example' => 'Beli kopi',
+                'example' => 'Makan siang',
             ],
             'category' => [
                 'description' => 'Nama kategori transaksi.',
@@ -52,7 +52,7 @@ class TransactionRequest extends ApiFormRequest
             ],
             'transaction_date' => [
                 'description' => 'Tanggal transaksi.',
-                'example' => '2026-05-20',
+                'example' => '2026-06-01',
             ],
         ];
     }

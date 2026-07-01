@@ -20,14 +20,24 @@ class DashboardService
 
         $totalIncome = (int) (clone $monthlyQuery)->where('type', Transaction::TYPE_INCOME)->sum('amount');
         $totalExpense = (int) (clone $monthlyQuery)->where('type', Transaction::TYPE_EXPENSE)->sum('amount');
+        $netCashflow = $totalIncome - $totalExpense;
+        $monthlyBudget = (int) $user->monthly_budget;
+        $budgetUsedPercentage = $this->budgetUsedPercentage($monthlyBudget, $totalExpense);
+        $expenseByCategory = $this->expenseByCategory($user, $start, $end, $totalExpense);
 
         return [
-            'current_month_balance' => $totalIncome - $totalExpense,
+            'current_month_balance' => $netCashflow,
             'total_income' => $totalIncome,
             'total_expense' => $totalExpense,
+            'net_cashflow' => $netCashflow,
+            'monthly_budget' => $monthlyBudget,
+            'budget_remaining' => $monthlyBudget - $totalExpense,
+            'budget_used_percentage' => $budgetUsedPercentage,
+            'budget_status' => $this->budgetStatus($monthlyBudget, $budgetUsedPercentage),
+            'top_spending_category' => $this->topSpendingCategory($expenseByCategory),
             'insight_strip' => $this->buildInsight($user),
             'recent_transactions' => $this->recentTransactions($user),
-            'expense_by_category' => $this->expenseByCategory($user, $start, $end, $totalExpense),
+            'expense_by_category' => $expenseByCategory,
         ];
     }
 
@@ -93,6 +103,48 @@ class DashboardService
             ->sortByDesc('amount')
             ->values()
             ->all();
+    }
+
+    private function budgetUsedPercentage(int $monthlyBudget, int $totalExpense): int
+    {
+        if ($monthlyBudget <= 0) {
+            return 0;
+        }
+
+        return (int) round(($totalExpense / $monthlyBudget) * 100);
+    }
+
+    private function budgetStatus(int $monthlyBudget, int $budgetUsedPercentage): string
+    {
+        if ($monthlyBudget <= 0) {
+            return 'belum_diatur';
+        }
+
+        if ($budgetUsedPercentage >= 100) {
+            return 'boros';
+        }
+
+        if ($budgetUsedPercentage >= 70) {
+            return 'waspada';
+        }
+
+        return 'aman';
+    }
+
+    private function topSpendingCategory(array $expenseByCategory): ?array
+    {
+        if ($expenseByCategory === []) {
+            return null;
+        }
+
+        $category = $expenseByCategory[0];
+
+        return [
+            'name' => $category['category_name'],
+            'icon' => $category['category_icon'],
+            'amount' => $category['amount'],
+            'percentage' => $category['percentage_of_expense'],
+        ];
     }
 
     private function buildInsight(User $user): array

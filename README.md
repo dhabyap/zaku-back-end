@@ -1,6 +1,6 @@
 # Zaku Backend API
 
-Backend API untuk aplikasi Zaku, yaitu aplikasi pencatatan keuangan digital. Project ini dibuat dengan Laravel dan menyediakan API untuk login, register, wallet, transaksi, dashboard, budget bulanan, dan pencatatan transaksi lewat chat.
+Backend API untuk aplikasi Zaku, yaitu aplikasi tracking pemasukan dan pengeluaran. Project ini dibuat dengan Laravel dan menyediakan API untuk login, register, transaksi, dashboard cashflow, budget bulanan, dan pencatatan transaksi lewat chat.
 
 README ini dibuat untuk dua tipe pembaca:
 
@@ -16,8 +16,7 @@ Contoh fungsi yang sudah tersedia:
 - Register dan login user.
 - Verifikasi email dengan kode.
 - JWT Bearer token untuk akses endpoint yang butuh login.
-- Wallet: cek saldo, top up, withdraw, kirim uang.
-- Transaksi: daftar transaksi, statistik, kategori, tambah transaksi lewat chat.
+- Transaksi: daftar transaksi, detail, hapus, statistik, kategori, tambah manual, dan tambah lewat chat.
 - Dashboard ringkasan keuangan.
 - Dokumentasi API otomatis lewat Scribe di `/docs`.
 
@@ -195,10 +194,10 @@ Authorization: Bearer TOKEN_DARI_LOGIN
 Accept: application/json
 ```
 
-Contoh cek saldo:
+Contoh ambil dashboard:
 
 ```http
-GET http://127.0.0.1:8000/api/wallet/balance
+GET http://127.0.0.1:8000/api/dashboard
 Authorization: Bearer TOKEN_DARI_LOGIN
 Accept: application/json
 ```
@@ -234,16 +233,13 @@ Endpoint yang membutuhkan JWT token:
 | PUT | `/user/budget` | Update budget bulanan |
 | GET | `/dashboard` | Ambil dashboard keuangan |
 | GET | `/transactions` | Ambil daftar transaksi |
+| POST | `/transactions` | Catat pemasukan/pengeluaran manual |
 | GET | `/transactions/stats` | Ambil statistik transaksi |
 | GET | `/transactions/categories` | Ambil ringkasan kategori |
 | GET | `/transactions/{id}` | Detail transaksi |
 | DELETE | `/transactions/{id}` | Hapus transaksi |
 | POST | `/transactions/chat` | Catat transaksi dari pesan chat parser local |
 | POST | `/ai/chat` | Catat transaksi dari chat dengan AI/fallback local |
-| GET | `/wallet/balance` | Cek saldo wallet |
-| POST | `/wallet/topup` | Top up wallet |
-| POST | `/wallet/withdraw` | Withdraw wallet |
-| POST | `/wallet/send` | Kirim uang ke user lain |
 
 Dokumentasi lengkap dengan contoh request/response ada di `/docs`.
 

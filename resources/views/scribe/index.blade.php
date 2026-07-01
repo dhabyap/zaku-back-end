@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>Zaku Backend API Documentation</title>
+    <title>DOMPET Backend API API Documentation</title>
 
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 
@@ -105,7 +105,10 @@
                     <a href="#api">API</a>
                 </li>
                                     <ul id="tocify-subheader-api" class="tocify-subheader">
-                                                    <li class="tocify-item level-2" data-unique="api-GETapi-user-profile">
+                                                    <li class="tocify-item level-2" data-unique="api-POSTapi-auth-reset-password">
+                                <a href="#api-POSTapi-auth-reset-password">POST api/auth/reset-password</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="api-GETapi-user-profile">
                                 <a href="#api-GETapi-user-profile">GET api/user/profile</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="api-PUTapi-user-profile">
@@ -120,29 +123,26 @@
                                                                                 <li class="tocify-item level-2" data-unique="api-GETapi-transactions">
                                 <a href="#api-GETapi-transactions">GET api/transactions</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="api-POSTapi-transactions">
+                                <a href="#api-POSTapi-transactions">POST api/transactions</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="api-GETapi-transactions-stats">
                                 <a href="#api-GETapi-transactions-stats">GET api/transactions/stats</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="api-GETapi-transactions-categories">
                                 <a href="#api-GETapi-transactions-categories">GET api/transactions/categories</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="api-POSTapi-ai-chat">
+                                <a href="#api-POSTapi-ai-chat">POST api/ai/chat</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="api-GETapi-transactions--id-">
                                 <a href="#api-GETapi-transactions--id-">GET api/transactions/{id}</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="api-DELETEapi-transactions--id-">
+                                <a href="#api-DELETEapi-transactions--id-">DELETE api/transactions/{id}</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="api-POSTapi-transactions-chat">
                                 <a href="#api-POSTapi-transactions-chat">POST api/transactions/chat</a>
-                            </li>
-                                                                                <li class="tocify-item level-2" data-unique="api-GETapi-wallet-balance">
-                                <a href="#api-GETapi-wallet-balance">GET api/wallet/balance</a>
-                            </li>
-                                                                                <li class="tocify-item level-2" data-unique="api-POSTapi-wallet-topup">
-                                <a href="#api-POSTapi-wallet-topup">POST api/wallet/topup</a>
-                            </li>
-                                                                                <li class="tocify-item level-2" data-unique="api-POSTapi-wallet-withdraw">
-                                <a href="#api-POSTapi-wallet-withdraw">POST api/wallet/withdraw</a>
-                            </li>
-                                                                                <li class="tocify-item level-2" data-unique="api-POSTapi-wallet-send">
-                                <a href="#api-POSTapi-wallet-send">POST api/wallet/send</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -155,7 +155,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: May 13, 2026</li>
+        <li>Last updated: May 20, 2026</li>
     </ul>
 </div>
 
@@ -185,7 +185,7 @@
 <p>
 </p>
 
-<p>Membuat user baru, wallet default, kode verifikasi email, dan JWT token.</p>
+<p>Membuat user baru, ledger internal, kode verifikasi email, dan JWT token.</p>
 
 <span id="example-requests-POSTapi-auth-register">
 <blockquote>Example request:</blockquote>
@@ -246,15 +246,7 @@ fetch(url, {
             &quot;id&quot;: 1,
             &quot;full_name&quot;: &quot;John Doe&quot;,
             &quot;email&quot;: &quot;user@example.com&quot;,
-            &quot;phone_number&quot;: &quot;08123456789&quot;,
-            &quot;is_verified&quot;: false,
-            &quot;last_login_at&quot;: null,
-            &quot;wallet&quot;: {
-                &quot;id&quot;: 1,
-                &quot;user_id&quot;: 1,
-                &quot;balance&quot;: &quot;0.00&quot;,
-                &quot;status&quot;: &quot;active&quot;
-            }
+            &quot;avatar_initial&quot;: &quot;J&quot;
         },
         &quot;token&quot;: &quot;jwt_token_here&quot;
     }
@@ -1658,7 +1650,167 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="api-GETapi-user-profile">GET api/user/profile</h2>
+                                <h2 id="api-POSTapi-auth-reset-password">POST api/auth/reset-password</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-auth-reset-password">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://127.0.0.1:8000/api/auth/reset-password" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"email\": \"user@example.com\",
+    \"token\": \"reset-token\",
+    \"password\": \"password123\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://127.0.0.1:8000/api/auth/reset-password"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "email": "user@example.com",
+    "token": "reset-token",
+    "password": "password123"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-auth-reset-password">
+</span>
+<span id="execution-results-POSTapi-auth-reset-password" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-auth-reset-password"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-auth-reset-password"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-auth-reset-password" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-auth-reset-password">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-auth-reset-password" data-method="POST"
+      data-path="api/auth/reset-password"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-auth-reset-password', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-auth-reset-password"
+                    onclick="tryItOut('POSTapi-auth-reset-password');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-auth-reset-password"
+                    onclick="cancelTryOut('POSTapi-auth-reset-password');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-auth-reset-password"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/auth/reset-password</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-auth-reset-password"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-auth-reset-password"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>email</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="email"                data-endpoint="POSTapi-auth-reset-password"
+               value="user@example.com"
+               data-component="body">
+    <br>
+<p>Email user yang meminta reset password. Must be a valid email address. Example: <code>user@example.com</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>token</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="token"                data-endpoint="POSTapi-auth-reset-password"
+               value="reset-token"
+               data-component="body">
+    <br>
+<p>Token reset password dari email atau log. Example: <code>reset-token</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>password</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="password"                data-endpoint="POSTapi-auth-reset-password"
+               value="password123"
+               data-component="body">
+    <br>
+<p>Password baru minimal 8 karakter. Must be at least 8 characters. Example: <code>password123</code></p>
+        </div>
+        </form>
+
+                    <h2 id="api-GETapi-user-profile">GET api/user/profile</h2>
 
 <p>
 </p>
@@ -1707,7 +1859,7 @@ cache-control: no-cache, private
 content-type: application/json
 x-ratelimit-limit: 60
 x-ratelimit-remaining: 59
-access-control-allow-origin: *
+vary: Origin
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
@@ -2115,7 +2267,7 @@ cache-control: no-cache, private
 content-type: application/json
 x-ratelimit-limit: 60
 x-ratelimit-remaining: 58
-access-control-allow-origin: *
+vary: Origin
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
@@ -2245,7 +2397,7 @@ cache-control: no-cache, private
 content-type: application/json
 x-ratelimit-limit: 60
 x-ratelimit-remaining: 57
-access-control-allow-origin: *
+vary: Origin
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
@@ -2326,6 +2478,196 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
+                    <h2 id="api-POSTapi-transactions">POST api/transactions</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-transactions">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://127.0.0.1:8000/api/transactions" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"type\": \"expense\",
+    \"amount\": 65000,
+    \"description\": \"Beli kopi\",
+    \"category\": \"MAKANAN\",
+    \"transaction_date\": \"2026-05-20\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://127.0.0.1:8000/api/transactions"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "type": "expense",
+    "amount": 65000,
+    "description": "Beli kopi",
+    "category": "MAKANAN",
+    "transaction_date": "2026-05-20"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-transactions">
+</span>
+<span id="execution-results-POSTapi-transactions" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-transactions"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-transactions"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-transactions" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-transactions">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-transactions" data-method="POST"
+      data-path="api/transactions"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-transactions', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-transactions"
+                    onclick="tryItOut('POSTapi-transactions');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-transactions"
+                    onclick="cancelTryOut('POSTapi-transactions');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-transactions"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/transactions</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-transactions"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-transactions"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>type</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="type"                data-endpoint="POSTapi-transactions"
+               value="expense"
+               data-component="body">
+    <br>
+<p>Jenis transaksi. Example: <code>expense</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>income</code></li> <li><code>expense</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>amount</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="amount"                data-endpoint="POSTapi-transactions"
+               value="65000"
+               data-component="body">
+    <br>
+<p>Nominal transaksi. Example: <code>65000</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>description</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="description"                data-endpoint="POSTapi-transactions"
+               value="Beli kopi"
+               data-component="body">
+    <br>
+<p>Deskripsi transaksi. Must not be greater than 1000 characters. Example: <code>Beli kopi</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>category</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="category"                data-endpoint="POSTapi-transactions"
+               value="MAKANAN"
+               data-component="body">
+    <br>
+<p>Nama kategori transaksi. The <code>name</code> of an existing record in the categories table. Example: <code>MAKANAN</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>transaction_date</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="transaction_date"                data-endpoint="POSTapi-transactions"
+               value="2026-05-20"
+               data-component="body">
+    <br>
+<p>Tanggal transaksi. Must be a valid date. Example: <code>2026-05-20</code></p>
+        </div>
+        </form>
+
                     <h2 id="api-GETapi-transactions-stats">GET api/transactions/stats</h2>
 
 <p>
@@ -2375,7 +2717,7 @@ cache-control: no-cache, private
 content-type: application/json
 x-ratelimit-limit: 60
 x-ratelimit-remaining: 56
-access-control-allow-origin: *
+vary: Origin
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
@@ -2505,7 +2847,7 @@ cache-control: no-cache, private
 content-type: application/json
 x-ratelimit-limit: 60
 x-ratelimit-remaining: 55
-access-control-allow-origin: *
+vary: Origin
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
@@ -2586,6 +2928,138 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
+                    <h2 id="api-POSTapi-ai-chat">POST api/ai/chat</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-POSTapi-ai-chat">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://127.0.0.1:8000/api/ai/chat" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"message\": \"Beli kopi di Starbucks 65 ribu\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://127.0.0.1:8000/api/ai/chat"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "message": "Beli kopi di Starbucks 65 ribu"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-ai-chat">
+</span>
+<span id="execution-results-POSTapi-ai-chat" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-ai-chat"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-ai-chat"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-ai-chat" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-ai-chat">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-ai-chat" data-method="POST"
+      data-path="api/ai/chat"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-ai-chat', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-ai-chat"
+                    onclick="tryItOut('POSTapi-ai-chat');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-ai-chat"
+                    onclick="cancelTryOut('POSTapi-ai-chat');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-ai-chat"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/ai/chat</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-ai-chat"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-ai-chat"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>message</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="message"                data-endpoint="POSTapi-ai-chat"
+               value="Beli kopi di Starbucks 65 ribu"
+               data-component="body">
+    <br>
+<p>Input teks natural language untuk dicatat sebagai transaksi. Must be at least 3 characters. Must not be greater than 500 characters. Example: <code>Beli kopi di Starbucks 65 ribu</code></p>
+        </div>
+        </form>
+
                     <h2 id="api-GETapi-transactions--id-">GET api/transactions/{id}</h2>
 
 <p>
@@ -2635,7 +3109,7 @@ cache-control: no-cache, private
 content-type: application/json
 x-ratelimit-limit: 60
 x-ratelimit-remaining: 54
-access-control-allow-origin: *
+vary: Origin
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
@@ -2722,6 +3196,130 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="id"                data-endpoint="GETapi-transactions--id-"
+               value="consequatur"
+               data-component="url">
+    <br>
+<p>The ID of the transaction. Example: <code>consequatur</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="api-DELETEapi-transactions--id-">DELETE api/transactions/{id}</h2>
+
+<p>
+</p>
+
+
+
+<span id="example-requests-DELETEapi-transactions--id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "http://127.0.0.1:8000/api/transactions/consequatur" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://127.0.0.1:8000/api/transactions/consequatur"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-transactions--id-">
+</span>
+<span id="execution-results-DELETEapi-transactions--id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-transactions--id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-transactions--id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-transactions--id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-transactions--id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-transactions--id-" data-method="DELETE"
+      data-path="api/transactions/{id}"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-transactions--id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-transactions--id-"
+                    onclick="tryItOut('DELETEapi-transactions--id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-transactions--id-"
+                    onclick="cancelTryOut('DELETEapi-transactions--id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-transactions--id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/transactions/{id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-transactions--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-transactions--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="DELETEapi-transactions--id-"
                value="consequatur"
                data-component="url">
     <br>
@@ -2858,574 +3456,6 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>Input teks natural language untuk dicatat sebagai transaksi. Must be at least 3 characters. Must not be greater than 500 characters. Example: <code>Beli kopi di Starbucks 65 ribu</code></p>
-        </div>
-        </form>
-
-                    <h2 id="api-GETapi-wallet-balance">GET api/wallet/balance</h2>
-
-<p>
-</p>
-
-
-
-<span id="example-requests-GETapi-wallet-balance">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request GET \
-    --get "http://127.0.0.1:8000/api/wallet/balance" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json"</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "http://127.0.0.1:8000/api/wallet/balance"
-);
-
-const headers = {
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-
-fetch(url, {
-    method: "GET",
-    headers,
-}).then(response =&gt; response.json());</code></pre></div>
-
-</span>
-
-<span id="example-responses-GETapi-wallet-balance">
-            <blockquote>
-            <p>Example response (401):</p>
-        </blockquote>
-                <details class="annotation">
-            <summary style="cursor: pointer;">
-                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
-            </summary>
-            <pre><code class="language-http">www-authenticate: jwt-auth
-cache-control: no-cache, private
-content-type: application/json
-x-ratelimit-limit: 60
-x-ratelimit-remaining: 53
-access-control-allow-origin: *
- </code></pre></details>         <pre>
-
-<code class="language-json" style="max-height: 300px;">{
-    &quot;message&quot;: &quot;Token not provided&quot;
-}</code>
- </pre>
-    </span>
-<span id="execution-results-GETapi-wallet-balance" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-GETapi-wallet-balance"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-GETapi-wallet-balance"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-GETapi-wallet-balance" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-GETapi-wallet-balance">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-GETapi-wallet-balance" data-method="GET"
-      data-path="api/wallet/balance"
-      data-authed="0"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('GETapi-wallet-balance', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-GETapi-wallet-balance"
-                    onclick="tryItOut('GETapi-wallet-balance');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-GETapi-wallet-balance"
-                    onclick="cancelTryOut('GETapi-wallet-balance');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-GETapi-wallet-balance"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-green">GET</small>
-            <b><code>api/wallet/balance</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="GETapi-wallet-balance"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="GETapi-wallet-balance"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                        </form>
-
-                    <h2 id="api-POSTapi-wallet-topup">POST api/wallet/topup</h2>
-
-<p>
-</p>
-
-
-
-<span id="example-requests-POSTapi-wallet-topup">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request POST \
-    "http://127.0.0.1:8000/api/wallet/topup" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json" \
-    --data "{
-    \"amount\": 100000
-}"
-</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "http://127.0.0.1:8000/api/wallet/topup"
-);
-
-const headers = {
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-let body = {
-    "amount": 100000
-};
-
-fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-}).then(response =&gt; response.json());</code></pre></div>
-
-</span>
-
-<span id="example-responses-POSTapi-wallet-topup">
-</span>
-<span id="execution-results-POSTapi-wallet-topup" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-POSTapi-wallet-topup"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-wallet-topup"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-POSTapi-wallet-topup" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-wallet-topup">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-POSTapi-wallet-topup" data-method="POST"
-      data-path="api/wallet/topup"
-      data-authed="0"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-wallet-topup', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-wallet-topup"
-                    onclick="tryItOut('POSTapi-wallet-topup');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-wallet-topup"
-                    onclick="cancelTryOut('POSTapi-wallet-topup');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-wallet-topup"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-black">POST</small>
-            <b><code>api/wallet/topup</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-wallet-topup"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-wallet-topup"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
-        <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>amount</code></b>&nbsp;&nbsp;
-<small>integer</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="number" style="display: none"
-               step="any"               name="amount"                data-endpoint="POSTapi-wallet-topup"
-               value="100000"
-               data-component="body">
-    <br>
-<p>Nominal transaksi wallet dalam integer IDR. Must be at least 1. Example: <code>100000</code></p>
-        </div>
-        </form>
-
-                    <h2 id="api-POSTapi-wallet-withdraw">POST api/wallet/withdraw</h2>
-
-<p>
-</p>
-
-
-
-<span id="example-requests-POSTapi-wallet-withdraw">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request POST \
-    "http://127.0.0.1:8000/api/wallet/withdraw" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json" \
-    --data "{
-    \"amount\": 100000,
-    \"account_number\": \"1234567890\"
-}"
-</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "http://127.0.0.1:8000/api/wallet/withdraw"
-);
-
-const headers = {
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-let body = {
-    "amount": 100000,
-    "account_number": "1234567890"
-};
-
-fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-}).then(response =&gt; response.json());</code></pre></div>
-
-</span>
-
-<span id="example-responses-POSTapi-wallet-withdraw">
-</span>
-<span id="execution-results-POSTapi-wallet-withdraw" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-POSTapi-wallet-withdraw"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-wallet-withdraw"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-POSTapi-wallet-withdraw" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-wallet-withdraw">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-POSTapi-wallet-withdraw" data-method="POST"
-      data-path="api/wallet/withdraw"
-      data-authed="0"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-wallet-withdraw', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-wallet-withdraw"
-                    onclick="tryItOut('POSTapi-wallet-withdraw');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-wallet-withdraw"
-                    onclick="cancelTryOut('POSTapi-wallet-withdraw');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-wallet-withdraw"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-black">POST</small>
-            <b><code>api/wallet/withdraw</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-wallet-withdraw"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-wallet-withdraw"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
-        <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>amount</code></b>&nbsp;&nbsp;
-<small>integer</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="number" style="display: none"
-               step="any"               name="amount"                data-endpoint="POSTapi-wallet-withdraw"
-               value="100000"
-               data-component="body">
-    <br>
-<p>Nominal transaksi wallet dalam integer IDR. Must be at least 1. Example: <code>100000</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>account_number</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="account_number"                data-endpoint="POSTapi-wallet-withdraw"
-               value="1234567890"
-               data-component="body">
-    <br>
-<p>Nomor rekening tujuan penarikan. Must not be greater than 50 characters. Example: <code>1234567890</code></p>
-        </div>
-        </form>
-
-                    <h2 id="api-POSTapi-wallet-send">POST api/wallet/send</h2>
-
-<p>
-</p>
-
-
-
-<span id="example-requests-POSTapi-wallet-send">
-<blockquote>Example request:</blockquote>
-
-
-<div class="bash-example">
-    <pre><code class="language-bash">curl --request POST \
-    "http://127.0.0.1:8000/api/wallet/send" \
-    --header "Content-Type: application/json" \
-    --header "Accept: application/json" \
-    --data "{
-    \"amount\": 100000,
-    \"recipient_email\": \"user@email.com\",
-    \"note\": \"opsional\"
-}"
-</code></pre></div>
-
-
-<div class="javascript-example">
-    <pre><code class="language-javascript">const url = new URL(
-    "http://127.0.0.1:8000/api/wallet/send"
-);
-
-const headers = {
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-};
-
-let body = {
-    "amount": 100000,
-    "recipient_email": "user@email.com",
-    "note": "opsional"
-};
-
-fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-}).then(response =&gt; response.json());</code></pre></div>
-
-</span>
-
-<span id="example-responses-POSTapi-wallet-send">
-</span>
-<span id="execution-results-POSTapi-wallet-send" hidden>
-    <blockquote>Received response<span
-                id="execution-response-status-POSTapi-wallet-send"></span>:
-    </blockquote>
-    <pre class="json"><code id="execution-response-content-POSTapi-wallet-send"
-      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
-</span>
-<span id="execution-error-POSTapi-wallet-send" hidden>
-    <blockquote>Request failed with error:</blockquote>
-    <pre><code id="execution-error-message-POSTapi-wallet-send">
-
-Tip: Check that you&#039;re properly connected to the network.
-If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
-You can check the Dev Tools console for debugging information.</code></pre>
-</span>
-<form id="form-POSTapi-wallet-send" data-method="POST"
-      data-path="api/wallet/send"
-      data-authed="0"
-      data-hasfiles="0"
-      data-isarraybody="0"
-      autocomplete="off"
-      onsubmit="event.preventDefault(); executeTryOut('POSTapi-wallet-send', this);">
-    <h3>
-        Request&nbsp;&nbsp;&nbsp;
-                    <button type="button"
-                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-tryout-POSTapi-wallet-send"
-                    onclick="tryItOut('POSTapi-wallet-send');">Try it out ⚡
-            </button>
-            <button type="button"
-                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-canceltryout-POSTapi-wallet-send"
-                    onclick="cancelTryOut('POSTapi-wallet-send');" hidden>Cancel 🛑
-            </button>&nbsp;&nbsp;
-            <button type="submit"
-                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
-                    id="btn-executetryout-POSTapi-wallet-send"
-                    data-initial-text="Send Request 💥"
-                    data-loading-text="⏱ Sending..."
-                    hidden>Send Request 💥
-            </button>
-            </h3>
-            <p>
-            <small class="badge badge-black">POST</small>
-            <b><code>api/wallet/send</code></b>
-        </p>
-                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Content-Type"                data-endpoint="POSTapi-wallet-send"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <div style="padding-left: 28px; clear: unset;">
-                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
-&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="Accept"                data-endpoint="POSTapi-wallet-send"
-               value="application/json"
-               data-component="header">
-    <br>
-<p>Example: <code>application/json</code></p>
-            </div>
-                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
-        <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>amount</code></b>&nbsp;&nbsp;
-<small>integer</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="number" style="display: none"
-               step="any"               name="amount"                data-endpoint="POSTapi-wallet-send"
-               value="100000"
-               data-component="body">
-    <br>
-<p>Nominal transaksi wallet dalam integer IDR. Must be at least 1. Example: <code>100000</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>recipient_email</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
- &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="recipient_email"                data-endpoint="POSTapi-wallet-send"
-               value="user@email.com"
-               data-component="body">
-    <br>
-<p>Email penerima yang sudah terdaftar. Must be a valid email address. The <code>email</code> of an existing record in the users table. Must not be one of <code></code>. Example: <code>user@email.com</code></p>
-        </div>
-                <div style=" padding-left: 28px;  clear: unset;">
-            <b style="line-height: 2;"><code>note</code></b>&nbsp;&nbsp;
-<small>string</small>&nbsp;
-<i>optional</i> &nbsp;
- &nbsp;
-                <input type="text" style="display: none"
-                              name="note"                data-endpoint="POSTapi-wallet-send"
-               value="opsional"
-               data-component="body">
-    <br>
-<p>Catatan transfer opsional. Must not be greater than 255 characters. Example: <code>opsional</code></p>
         </div>
         </form>
 
