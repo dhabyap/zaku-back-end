@@ -59,7 +59,7 @@ class SpendingMapTest extends TestCase
         $jwt = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$jwt)
-            ->getJson('/api/transactions/categories?month=2026-06');
+            ->getJson('/api/v1/transactions/categories?month=2026-06');
 
         $response->assertStatus(200)
             ->assertJsonStructure([

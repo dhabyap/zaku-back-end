@@ -24,7 +24,7 @@ class TransactionService
         return DB::transaction(function () use ($user, $category, $type, $amount, $description, $source, $rawMessage, $transactionDate) {
             $wallet = $user->wallet ?: Wallet::create([
                 'user_id' => $user->id,
-                'balance' => 0,
+                'balance_cents' => 0,
                 'status' => Wallet::STATUS_ACTIVE,
             ]);
 
@@ -42,9 +42,8 @@ class TransactionService
 
             if ($type === Transaction::TYPE_INCOME) {
                 $wallet->addBalance($amount);
-            } else {
-                $wallet->balance = number_format(((float) $wallet->balance) - $amount, 2, '.', '');
-                $wallet->save();
+            } elseif ($type === Transaction::TYPE_EXPENSE) {
+                $wallet->deductBalance($amount);
             }
 
             return $transaction->load('category');
@@ -71,11 +70,10 @@ class TransactionService
             // If amount or type changed, revert old transaction effect first
             if ($newAmount !== $oldAmount || $newType !== $oldType) {
                 if ($oldType === Transaction::TYPE_INCOME) {
-                    $wallet->balance = number_format(((float) $wallet->balance) - $oldAmount, 2, '.', '');
+                    $wallet->deductBalance($oldAmount);
                 } else {
-                    $wallet->balance = number_format(((float) $wallet->balance) + $oldAmount, 2, '.', '');
+                    $wallet->addBalance($oldAmount);
                 }
-                $wallet->save();
             }
 
             $transaction->category_id = $category?->id ?? $transaction->category_id;
@@ -95,12 +93,10 @@ class TransactionService
             // Apply new transaction effect if changed
             if ($newAmount !== $oldAmount || $newType !== $oldType) {
                 if ($newType === Transaction::TYPE_INCOME) {
-                    $wallet->balance = number_format(((float) $wallet->balance) + $newAmount, 2, '.', '');
+                    $wallet->addBalance($newAmount);
                 } else {
-                    $wallet->balance = number_format(((float) $wallet->balance) - $newAmount, 2, '.', '');
+                    $wallet->deductBalance($newAmount);
                 }
-
-                $wallet->save();
             }
 
             return $transaction->load('category');

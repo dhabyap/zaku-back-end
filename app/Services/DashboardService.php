@@ -157,21 +157,93 @@ class DashboardService
             ];
         }
 
-        $food = fn (Carbon $from, Carbon $to): int => (int) $this->completedTransactions($user)
+        $start = now()->startOfMonth();
+        $end = now()->endOfMonth();
+
+        // --- Total expense this month vs last month ---
+        $lastMonthStart = now()->subMonth()->startOfMonth();
+        $lastMonthEnd = now()->subMonth()->endOfMonth();
+
+        $thisMonthExpense = (int) $this->completedTransactions($user)
             ->where('type', Transaction::TYPE_EXPENSE)
-            ->whereBetween('transaction_date', [$from, $to])
-            ->whereHas('category', fn (Builder $query) => $query->where('name', 'MAKANAN'))
+            ->whereBetween('transaction_date', [$start, $end])
             ->sum('amount');
 
-        $thisWeek = $food(now()->startOfWeek(), now()->endOfWeek());
-        $lastWeek = $food(now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek());
+        $lastMonthExpense = (int) $this->completedTransactions($user)
+            ->where('type', Transaction::TYPE_EXPENSE)
+            ->whereBetween('transaction_date', [$lastMonthStart, $lastMonthEnd])
+            ->sum('amount');
 
-        if ($lastWeek > 0 && $thisWeek > $lastWeek) {
-            $percentage = (int) round((($thisWeek - $lastWeek) / $lastWeek) * 100);
+        // --- Budget health insight ---
+        $monthlyBudget = (int) $user->monthly_budget;
+        if ($monthlyBudget > 0 && $thisMonthExpense > 0) {
+            $usedPct = round(($thisMonthExpense / $monthlyBudget) * 100);
+            if ($usedPct >= 100) {
+                return [
+                    'text' => 'Budget bulan ini sudah habis!',
+                    'subtext' => 'Total pengeluaran Rp '.number_format($thisMonthExpense, 0, ',', '.').' dari Rp '.number_format($monthlyBudget, 0, ',', '.'),
+                    'icon' => '⚠️',
+                ];
+            }
+            if ($usedPct >= 70) {
+                $remaining = $monthlyBudget - $thisMonthExpense;
+                return [
+                    'text' => "Budget tersisa {$usedPct}% — waspada!",
+                    'subtext' => 'Sisa Rp '.number_format($remaining, 0, ',', '.').' untuk '. now()->daysInMonth - now()->day .' hari ke depan',
+                    'icon' => '⚠️',
+                ];
+            }
+        }
 
+        // --- Month-over-month expense trend ---
+        if ($lastMonthExpense > 0 && $thisMonthExpense > 0) {
+            $diff = $thisMonthExpense - $lastMonthExpense;
+            $pct = (int) round(abs($diff) / $lastMonthExpense * 100);
+
+            if ($diff > 0) {
+                return [
+                    'text' => "Pengeluaran naik {$pct}% dari bulan lalu",
+                    'subtext' => 'Bulan lalu Rp '.number_format($lastMonthExpense, 0, ',', '.').' → bulan ini Rp '.number_format($thisMonthExpense, 0, ',', '.'),
+                    'icon' => '📈',
+                ];
+            }
+
+            if ($diff < 0) {
+                return [
+                    'text' => "Pengeluaran turun {$pct}% dari bulan lalu",
+                    'subtext' => 'Bulan lalu Rp '.number_format($lastMonthExpense, 0, ',', '.').' → bulan ini Rp '.number_format($thisMonthExpense, 0, ',', '.'),
+                    'icon' => '📉',
+                ];
+            }
+        }
+
+        // --- Top category insight ---
+        $expenseByCategory = $this->expenseByCategory($user, $start, $end, $thisMonthExpense);
+        $topCategory = $this->topSpendingCategory($expenseByCategory);
+        if ($topCategory !== null && $topCategory['percentage'] >= 40) {
             return [
-                'text' => "Pengeluaran makanan +{$percentage}%",
-                'subtext' => 'Dibanding minggu lalu · Rp '.number_format($thisWeek - $lastWeek, 0, ',', '.'),
+                'text' => "{$topCategory['name']} mendominasi {$topCategory['percentage']}% pengeluaran",
+                'subtext' => 'Total Rp '.number_format($topCategory['amount'], 0, ',', '.'),
+                'icon' => '💡',
+            ];
+        }
+
+        // --- Week-over-week trend (top category or total) ---
+        $thisWeekExpense = (int) $this->completedTransactions($user)
+            ->where('type', Transaction::TYPE_EXPENSE)
+            ->whereBetween('transaction_date', [now()->startOfWeek(), now()->endOfWeek()])
+            ->sum('amount');
+
+        $lastWeekExpense = (int) $this->completedTransactions($user)
+            ->where('type', Transaction::TYPE_EXPENSE)
+            ->whereBetween('transaction_date', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])
+            ->sum('amount');
+
+        if ($lastWeekExpense > 0 && $thisWeekExpense > $lastWeekExpense) {
+            $pct = (int) round((($thisWeekExpense - $lastWeekExpense) / $lastWeekExpense) * 100);
+            return [
+                'text' => "Pengeluaran minggu ini +{$pct}%",
+                'subtext' => 'Dibanding minggu lalu · Rp '.number_format($thisWeekExpense - $lastWeekExpense, 0, ',', '.'),
                 'icon' => '💡',
             ];
         }

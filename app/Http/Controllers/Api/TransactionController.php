@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ChatTransactionRequest;
 use App\Http\Requests\TransactionRequest;
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Services\AiTransactionParserService;
@@ -36,6 +37,13 @@ class TransactionController extends Controller
             null,
             $request->input('transaction_date'),
         );
+
+        ActivityLog::log($transaction, 'created', null, [
+            'type' => $transaction->type,
+            'amount' => $transaction->amount,
+            'description' => $transaction->description,
+            'category' => $category->name,
+        ], 'Transaction created', $request);
 
         return $this->successResponse([
             'id' => $transaction->id,
@@ -81,19 +89,24 @@ class TransactionController extends Controller
 
         $balance = DB::transaction(function () use ($transaction) {
             $wallet = $transaction->wallet;
-            $amount = (float) $transaction->amount;
+            $amount = (int) $transaction->amount;
 
             if ($transaction->type === Transaction::TYPE_INCOME) {
-                $wallet->balance = number_format(((float) $wallet->balance) - $amount, 2, '.', '');
+                $wallet->deductBalance($amount);
             } else {
-                $wallet->balance = number_format(((float) $wallet->balance) + $amount, 2, '.', '');
+                $wallet->addBalance($amount);
             }
 
-            $wallet->save();
             $transaction->delete();
 
-            return (int) $wallet->balance;
+            return (int) $wallet->balance_cents;
         });
+
+        ActivityLog::log($transaction, 'deleted', [
+            'type' => $transaction->type,
+            'amount' => $transaction->amount,
+            'description' => $transaction->description,
+        ], null, 'Transaction deleted and wallet adjusted', $request);
 
         return $this->successResponse([
             'id' => $id,
@@ -103,18 +116,18 @@ class TransactionController extends Controller
 
     public function stats(Request $request): JsonResponse
     {
-        $query = $this->baseQuery($request);
+        $stats = $this->baseQuery($request)
+            ->selectRaw('count(*) as total')
+            ->selectRaw("count(case when transaction_date >= ? then 1 end) as this_month", [now()->startOfMonth()])
+            ->selectRaw('max(amount) as biggest')
+            ->selectRaw('count(distinct category_id) as categories')
+            ->first();
 
         return $this->successResponse([
-            'total' => (clone $query)->count(),
-            'this_month' => (clone $query)
-                ->whereBetween('transaction_date', [now()->startOfMonth(), now()->endOfMonth()])
-                ->count(),
-            'biggest' => (int) (clone $query)->max('amount'),
-            'categories' => (int) (clone $query)
-                ->whereNotNull('category_id')
-                ->distinct('category_id')
-                ->count('category_id'),
+            'total' => (int) $stats->total,
+            'this_month' => (int) $stats->this_month,
+            'biggest' => (int) $stats->biggest,
+            'categories' => (int) $stats->categories,
         ], 'Statistik transaksi berhasil diambil');
     }
 
@@ -176,6 +189,20 @@ class TransactionController extends Controller
         $limit = max(1, min((int) $request->query('limit', 100), 100));
         $page = max(1, (int) $request->query('page', 1));
 
+        // Search by description
+        if ($q = $request->query('q')) {
+            $query->where('description', 'like', '%'.str_replace(['%', '_'], ['\\%', '\\_'], $q).'%');
+        }
+
+        // Date range filter
+        if ($dateFrom = $request->query('date_from')) {
+            $query->whereDate('transaction_date', '>=', $dateFrom);
+        }
+        if ($dateTo = $request->query('date_to')) {
+            $query->whereDate('transaction_date', '<=', $dateTo);
+        }
+
+        // Type filter
         if ($filter === 'PEMASUKAN') {
             $query->where('type', Transaction::TYPE_INCOME);
         } elseif ($filter === 'PENGELUARAN') {
@@ -185,7 +212,20 @@ class TransactionController extends Controller
         }
 
         $total = (clone $query)->count();
-        $transactions = $query->latest('transaction_date')
+
+        // Sorting
+        $sortBy = $request->query('sort_by', 'transaction_date');
+        $sortOrder = strtolower($request->query('sort_order', 'desc'));
+
+        $allowedSorts = ['transaction_date', 'amount', 'description', 'type'];
+        if (! in_array($sortBy, $allowedSorts)) {
+            $sortBy = 'transaction_date';
+        }
+        if (! in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'desc';
+        }
+
+        $transactions = $query->orderBy($sortBy, $sortOrder)
             ->forPage($page, $limit)
             ->get()
             ->values();
@@ -278,6 +318,17 @@ class TransactionController extends Controller
             $request->input('description'),
             $request->input('transaction_date'),
         );
+
+        ActivityLog::log($transaction, 'updated', [
+            'type' => $transaction->type,
+            'amount' => $transaction->amount,
+            'description' => $transaction->description,
+        ], [
+            'type' => $updated->type,
+            'amount' => $updated->amount,
+            'description' => $updated->description,
+            'category' => $updated->category?->name,
+        ], 'Transaction updated', $request);
 
         return $this->successResponse([
             'id' => $updated->id,

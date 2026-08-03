@@ -26,7 +26,7 @@ class WalletController extends Controller
         $wallet = $this->walletFor($request->user());
 
         return $this->successResponse([
-            'balance' => (int) $wallet->balance,
+            'balance' => (int) $wallet->balance_cents,
             'total_income' => (int) $this->transactions($request->user()->id)
                 ->where('type', Transaction::TYPE_INCOME)
                 ->sum('amount'),
@@ -49,7 +49,7 @@ class WalletController extends Controller
         });
 
         return $this->successResponse([
-            'balance' => (int) $wallet->balance,
+            'balance' => (int) $wallet->balance_cents,
             'message' => 'Top up berhasil.',
         ], 'Top up berhasil.');
     }
@@ -78,7 +78,7 @@ class WalletController extends Controller
         }
 
         return $this->successResponse([
-            'balance' => (int) $wallet->balance,
+            'balance' => (int) $wallet->balance_cents,
             'message' => 'Penarikan berhasil diproses.',
         ], 'Penarikan berhasil diproses.');
     }
@@ -111,7 +111,7 @@ class WalletController extends Controller
         }
 
         return $this->successResponse([
-            'balance' => (int) $wallet->balance,
+            'balance' => (int) $wallet->balance_cents,
             'message' => 'Uang berhasil dikirim.',
         ], 'Uang berhasil dikirim.');
     }
@@ -120,7 +120,7 @@ class WalletController extends Controller
     {
         return $user->wallet ?: Wallet::create([
             'user_id' => $user->id,
-            'balance' => 0,
+            'balance_cents' => 0,
             'status' => Wallet::STATUS_ACTIVE,
         ]);
     }
