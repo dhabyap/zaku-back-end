@@ -28,7 +28,7 @@ return new class extends Migration
             }
 
             if (! Schema::hasColumn('transactions', 'source')) {
-                $table->enum('source', ['manual', 'chat'])->default('manual')->after('description');
+                $table->enum('source', ['manual', 'chat', 'recurring'])->default('manual')->after('description');
             }
 
             if (! Schema::hasColumn('transactions', 'raw_message')) {

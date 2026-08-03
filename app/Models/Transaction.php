@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Transaction extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     public const TYPE_INCOME = 'income';
 
@@ -18,6 +19,8 @@ class Transaction extends Model
     public const SOURCE_MANUAL = 'manual';
 
     public const SOURCE_CHAT = 'chat';
+
+    public const SOURCE_RECURRING = 'recurring';
 
     public const STATUS_PENDING = 'pending';
 

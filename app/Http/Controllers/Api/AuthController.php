@@ -62,12 +62,12 @@ class AuthController extends Controller
                 'password' => $request->string('password')->toString(),
                 'full_name' => $request->input('name', $request->input('full_name')),
                 'phone_number' => $request->input('phone_number'),
-                'is_verified' => true,
+                'is_verified' => !config('app.feature_email_verification', false),
             ]);
 
             Wallet::create([
                 'user_id' => $user->id,
-                'balance' => 0,
+                'balance_cents' => 0,
                 'status' => Wallet::STATUS_ACTIVE,
             ]);
 
@@ -167,6 +167,24 @@ class AuthController extends Controller
      * Refresh JWT token
      *
      * Membuat token JWT baru dan menginvalidasi token lama.
+     *
+     * @group Authentication
+     *
+     * @authenticated
+     *
+     * @response {
+     *   "status": "success",
+     *   "data": {
+     *     "access_token": "jwt_token_here",
+     *     "refresh_token": "jwt_token_here"
+     *   }
+     * }
+     */
+    /**
+     * Refresh JWT token (token rotation via blacklist)
+     *
+     * Menginvalidasi token lama (blacklist) dan mengembalikan token baru.
+     * Access token TTL = JWT_TTL (default 1440 menit).
      *
      * @group Authentication
      *
@@ -295,7 +313,7 @@ class AuthController extends Controller
         DB::transaction(function () use ($verificationCode) {
 
             $verificationCode->user->forceFill([
-                'is_verified' => true,
+                'is_verified' => !config('app.feature_email_verification', false),
                 'verification_code' => null,
             ])->save();
 

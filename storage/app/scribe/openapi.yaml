@@ -5,7 +5,7 @@ info:
   version: 1.0.0
 servers:
   -
-    url: 'http://127.0.0.1:8000'
+    url: 'http://127.0.0.1:8001'
 tags:
   -
     name: Authentication
@@ -23,7 +23,7 @@ security:
   -
     default: []
 paths:
-  /api/auth/register:
+  /api/v1/auth/register:
     post:
       summary: 'Register user'
       operationId: registerUser
@@ -109,7 +109,7 @@ paths:
                 - password
                 - full_name
       security: []
-  /api/auth/login:
+  /api/v1/auth/login:
     post:
       summary: 'Login user'
       operationId: loginUser
@@ -213,7 +213,7 @@ paths:
                 - email
                 - password
       security: []
-  /api/auth/verify-email:
+  /api/v1/auth/verify-email:
     post:
       summary: 'Verify email'
       operationId: verifyEmail
@@ -278,7 +278,7 @@ paths:
                 - code
                 - user_id
       security: []
-  /api/auth/resend-verification:
+  /api/v1/auth/resend-verification:
     post:
       summary: 'Resend verification code'
       operationId: resendVerificationCode
@@ -317,7 +317,7 @@ paths:
               required:
                 - email
       security: []
-  /api/auth/forgot-password:
+  /api/v1/auth/forgot-password:
     post:
       summary: 'Forgot password'
       operationId: forgotPassword
@@ -356,7 +356,7 @@ paths:
               required:
                 - email
       security: []
-  /api/auth/change-password:
+  /api/v1/auth/change-password:
     post:
       summary: 'Change password'
       operationId: changePassword
@@ -420,7 +420,7 @@ paths:
                 - old_password
                 - new_password
                 - new_password_confirmation
-  /api/auth/me:
+  /api/v1/auth/me:
     get:
       summary: 'Get authenticated user profile'
       operationId: getAuthenticatedUserProfile
@@ -457,11 +457,11 @@ paths:
                         example: user@example.com
       tags:
         - Authentication
-  /api/auth/refresh:
+  /api/v1/auth/refresh:
     post:
-      summary: 'Refresh JWT token'
-      operationId: refreshJWTToken
-      description: 'Membuat token JWT baru dan menginvalidasi token lama.'
+      summary: 'Refresh JWT token (token rotation via blacklist)'
+      operationId: refreshJWTTokentokenRotationViaBlacklist
+      description: "Menginvalidasi token lama (blacklist) dan mengembalikan token baru.\nAccess token TTL = JWT_TTL (default 1440 menit)."
       parameters: []
       responses:
         200:
@@ -490,7 +490,7 @@ paths:
                         example: jwt_token_here
       tags:
         - Authentication
-  /api/auth/logout:
+  /api/v1/auth/logout:
     post:
       summary: 'Logout user'
       operationId: logoutUser
@@ -515,10 +515,44 @@ paths:
                     example: 'Successfully logged out'
       tags:
         - Authentication
-  /api/auth/reset-password:
+  /api/v1/health:
+    get:
+      summary: ''
+      operationId: getApiV1Health
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  status: ok
+                  timestamp: '2026-07-02T03:53:33+00:00'
+                  app: 'DOMPET Backend API'
+                  version: 1.0.0
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    example: '2026-07-02T03:53:33+00:00'
+                  app:
+                    type: string
+                    example: 'DOMPET Backend API'
+                  version:
+                    type: string
+                    example: 1.0.0
+      tags:
+        - API
+      security: []
+  /api/v1/auth/reset-password:
     post:
       summary: ''
-      operationId: postApiAuthResetPassword
+      operationId: postApiV1AuthResetPassword
       description: ''
       parameters: []
       responses: {  }
@@ -548,10 +582,10 @@ paths:
                 - token
                 - password
       security: []
-  /api/user/profile:
+  /api/v1/user/profile:
     get:
       summary: ''
-      operationId: getApiUserProfile
+      operationId: getApiV1UserProfile
       description: ''
       parameters: []
       responses:
@@ -572,7 +606,7 @@ paths:
       security: []
     put:
       summary: ''
-      operationId: putApiUserProfile
+      operationId: putApiV1UserProfile
       description: ''
       parameters: []
       responses: {  }
@@ -597,10 +631,10 @@ paths:
                 - name
                 - email
       security: []
-  /api/user/budget:
+  /api/v1/user/budget:
     put:
       summary: ''
-      operationId: putApiUserBudget
+      operationId: putApiV1UserBudget
       description: ''
       parameters: []
       responses: {  }
@@ -620,10 +654,10 @@ paths:
               required:
                 - monthly_budget
       security: []
-  /api/dashboard:
+  /api/v1/dashboard:
     get:
       summary: ''
-      operationId: getApiDashboard
+      operationId: getApiV1Dashboard
       description: ''
       parameters: []
       responses:
@@ -642,10 +676,10 @@ paths:
       tags:
         - API
       security: []
-  /api/transactions:
+  /api/v1/transactions:
     get:
       summary: ''
-      operationId: getApiTransactions
+      operationId: getApiV1Transactions
       description: ''
       parameters: []
       responses:
@@ -666,7 +700,7 @@ paths:
       security: []
     post:
       summary: ''
-      operationId: postApiTransactions
+      operationId: postApiV1Transactions
       description: ''
       parameters: []
       responses: {  }
@@ -708,10 +742,10 @@ paths:
                 - description
                 - category
       security: []
-  /api/transactions/stats:
+  /api/v1/insights:
     get:
       summary: ''
-      operationId: getApiTransactionsStats
+      operationId: getApiV1Insights
       description: ''
       parameters: []
       responses:
@@ -730,55 +764,49 @@ paths:
       tags:
         - API
       security: []
-  /api/transactions/categories:
-    get:
+  '/api/v1/transactions/{id}':
+    put:
       summary: ''
-      operationId: getApiTransactionsCategories
-      description: ''
-      parameters: []
-      responses:
-        401:
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                example:
-                  message: 'Token not provided'
-                properties:
-                  message:
-                    type: string
-                    example: 'Token not provided'
-      tags:
-        - API
-      security: []
-  /api/ai/chat:
-    post:
-      summary: ''
-      operationId: postApiAiChat
+      operationId: putApiV1TransactionsId
       description: ''
       parameters: []
       responses: {  }
       tags:
         - API
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
               type: object
               properties:
-                message:
+                type:
                   type: string
-                  description: 'Input teks natural language untuk dicatat sebagai transaksi. Must be at least 3 characters. Must not be greater than 500 characters.'
-                  example: 'Beli kopi di Starbucks 65 ribu'
-              required:
-                - message
+                  description: 'Jenis transaksi.'
+                  example: expense
+                  enum:
+                    - income
+                    - expense
+                amount:
+                  type: integer
+                  description: 'Nominal transaksi.'
+                  example: 50000
+                description:
+                  type: string
+                  description: 'Deskripsi transaksi. Must not be greater than 1000 characters.'
+                  example: 'Makan siang'
+                category:
+                  type: string
+                  description: 'Nama kategori transaksi. The <code>name</code> of an existing record in the categories table.'
+                  example: MAKANAN
+                transaction_date:
+                  type: string
+                  description: 'Tanggal transaksi. Must be a valid date.'
+                  example: '2026-06-01'
       security: []
-  '/api/transactions/{id}':
     get:
       summary: ''
-      operationId: getApiTransactionsId
+      operationId: getApiV1TransactionsId
       description: ''
       parameters: []
       responses:
@@ -799,7 +827,7 @@ paths:
       security: []
     delete:
       summary: ''
-      operationId: deleteApiTransactionsId
+      operationId: deleteApiV1TransactionsId
       description: ''
       parameters: []
       responses: {  }
@@ -815,10 +843,54 @@ paths:
         required: true
         schema:
           type: string
-  /api/transactions/chat:
+  /api/v1/transactions/stats:
+    get:
+      summary: ''
+      operationId: getApiV1TransactionsStats
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Token not provided'
+                properties:
+                  message:
+                    type: string
+                    example: 'Token not provided'
+      tags:
+        - API
+      security: []
+  /api/v1/transactions/categories:
+    get:
+      summary: ''
+      operationId: getApiV1TransactionsCategories
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Token not provided'
+                properties:
+                  message:
+                    type: string
+                    example: 'Token not provided'
+      tags:
+        - API
+      security: []
+  /api/v1/ai/chat:
     post:
       summary: ''
-      operationId: postApiTransactionsChat
+      operationId: postApiV1AiChat
       description: ''
       parameters: []
       responses: {  }
@@ -838,3 +910,244 @@ paths:
               required:
                 - message
       security: []
+  /api/v1/transactions/chat:
+    post:
+      summary: ''
+      operationId: postApiV1TransactionsChat
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: 'Input teks natural language untuk dicatat sebagai transaksi. Must be at least 3 characters. Must not be greater than 500 characters.'
+                  example: 'Beli kopi di Starbucks 65 ribu'
+              required:
+                - message
+      security: []
+  /api/v1/recurring-transactions:
+    get:
+      summary: ''
+      operationId: getApiV1RecurringTransactions
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Token not provided'
+                properties:
+                  message:
+                    type: string
+                    example: 'Token not provided'
+      tags:
+        - API
+      security: []
+    post:
+      summary: ''
+      operationId: postApiV1RecurringTransactions
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: ''
+                  example: expense
+                  enum:
+                    - income
+                    - expense
+                amount_cents:
+                  type: integer
+                  description: 'Must be at least 1.'
+                  example: 45
+                description:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: 'Amet iste laborum eius est dolor dolores.'
+                category_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the categories table.'
+                  example: null
+                  nullable: true
+                frequency:
+                  type: string
+                  description: ''
+                  example: yearly
+                  enum:
+                    - daily
+                    - weekly
+                    - monthly
+                    - yearly
+                interval_value:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 365.'
+                  example: 4
+                start_date:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after or equal to <code>today</code>.'
+                  example: '2107-07-31'
+                end_date:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after <code>start_date</code>.'
+                  example: '2107-07-31'
+                  nullable: true
+              required:
+                - type
+                - amount_cents
+                - description
+                - frequency
+                - start_date
+      security: []
+  '/api/v1/recurring-transactions/{id}':
+    get:
+      summary: ''
+      operationId: getApiV1RecurringTransactionsId
+      description: ''
+      parameters: []
+      responses:
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Token not provided'
+                properties:
+                  message:
+                    type: string
+                    example: 'Token not provided'
+      tags:
+        - API
+      security: []
+    put:
+      summary: ''
+      operationId: putApiV1RecurringTransactionsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - API
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: ''
+                  example: expense
+                  enum:
+                    - income
+                    - expense
+                amount_cents:
+                  type: integer
+                  description: 'Must be at least 1.'
+                  example: 45
+                description:
+                  type: string
+                  description: 'Must not be greater than 255 characters.'
+                  example: 'Amet iste laborum eius est dolor dolores.'
+                category_id:
+                  type: string
+                  description: 'The <code>id</code> of an existing record in the categories table.'
+                  example: null
+                  nullable: true
+                frequency:
+                  type: string
+                  description: ''
+                  example: yearly
+                  enum:
+                    - daily
+                    - weekly
+                    - monthly
+                    - yearly
+                interval_value:
+                  type: integer
+                  description: 'Must be at least 1. Must not be greater than 365.'
+                  example: 4
+                start_date:
+                  type: string
+                  description: 'Must be a valid date.'
+                  example: '2026-07-02T03:53:44'
+                end_date:
+                  type: string
+                  description: 'Must be a valid date. Must be a date after <code>start_date</code>.'
+                  example: '2107-07-31'
+                  nullable: true
+                status:
+                  type: string
+                  description: ''
+                  example: active
+                  enum:
+                    - active
+                    - paused
+                    - cancelled
+      security: []
+    delete:
+      summary: ''
+      operationId: deleteApiV1RecurringTransactionsId
+      description: ''
+      parameters: []
+      responses: {  }
+      tags:
+        - API
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'The ID of the recurring transaction.'
+        example: 17
+        required: true
+        schema:
+          type: integer
+  '/api/{path}':
+    get:
+      summary: ''
+      operationId: getApiPath
+      description: ''
+      parameters: []
+      responses:
+        302:
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "<!DOCTYPE html>\n<html>\n    <head>\n        <meta charset=\"UTF-8\" />\n        <meta http-equiv=\"refresh\" content=\"0;url='http://127.0.0.1:8001/api/v1/2UZ5i'\" />\n\n        <title>Redirecting to http://127.0.0.1:8001/api/v1/2UZ5i</title>\n    </head>\n    <body>\n        Redirecting to <a href=\"http://127.0.0.1:8001/api/v1/2UZ5i\">http://127.0.0.1:8001/api/v1/2UZ5i</a>.\n    </body>\n</html>"
+      tags:
+        - API
+      security: []
+    parameters:
+      -
+        in: path
+        name: path
+        description: ''
+        example: 2UZ5i
+        required: true
+        schema:
+          type: string

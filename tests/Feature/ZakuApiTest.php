@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\RecurringTransaction;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
@@ -24,14 +25,23 @@ class ZakuApiTest extends TestCase
         parent::setUp();
 
         config(['jwt.secret' => 'test-jwt-secret']);
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
         $this->seed(\Database\Seeders\CategorySeeder::class);
+    }
+
+    public function test_health_endpoint(): void
+    {
+        $this->getJson('/api/v1/health')
+            ->assertOk()
+            ->assertJsonPath('status', 'ok')
+            ->assertJsonStructure(['status', 'timestamp', 'app']);
     }
 
     public function test_register_and_login_follow_zaku_contract(): void
     {
         Mail::fake();
 
-        $register = $this->postJson('/api/auth/register', [
+        $register = $this->postJson('/api/v1/auth/register', [
             'name' => 'Budi Santoso',
             'email' => 'budi@example.com',
             'password' => 'password123',
@@ -45,32 +55,15 @@ class ZakuApiTest extends TestCase
             ->assertJsonPath('data.user.avatar_initial', 'B')
             ->assertJsonStructure(['data' => ['token']]);
 
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/api/v1/auth/login', [
             'email' => 'budi@example.com',
             'password' => 'password123',
-        ])->assertForbidden()
-            ->assertJsonPath('status', 'error')
-            ->assertJsonPath('message', 'Email address is not verified.');
-
-        $code = \App\Models\VerificationCode::whereHas('user', fn ($query) => $query->where('email', 'budi@example.com'))->firstOrFail();
-
-        $this->postJson('/api/auth/verify-email', [
-            'email' => 'budi@example.com',
-            'code' => $code->code,
         ])->assertOk()
-            ->assertJsonPath('status', 'success');
-
-        $login = $this->postJson('/api/auth/login', [
-            'email' => 'budi@example.com',
-            'password' => 'password123',
-        ]);
-
-        $login->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.user.email', 'budi@example.com');
 
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/api/v1/auth/login', [
             'email' => 'budi@example.com',
             'password' => 'wrong-password',
         ])->assertUnauthorized()
@@ -84,7 +77,7 @@ class ZakuApiTest extends TestCase
             'email' => 'demo@example.com',
             'monthly_budget' => 3000000,
         ]);
-        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 5000000, 'status' => Wallet::STATUS_ACTIVE]);
         $food = Category::where('name', 'MAKANAN')->firstOrFail();
         $salary = Category::where('name', 'GAJI')->firstOrFail();
 
@@ -112,18 +105,18 @@ class ZakuApiTest extends TestCase
 
         $headers = $this->authHeaders($user);
 
-        $this->getJson('/api/user/profile', $headers)
+        $this->getJson('/api/v1/user/profile', $headers)
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.avatar_initial', 'D')
             ->assertJsonPath('data.budget.monthly_budget', 3000000)
             ->assertJsonPath('data.budget.budget_used', 65000);
 
-        $this->putJson('/api/user/budget', ['monthly_budget' => 4000000], $headers)
+        $this->putJson('/api/v1/user/budget', ['monthly_budget' => 4000000], $headers)
             ->assertOk()
             ->assertJsonPath('data.monthly_budget', 4000000);
 
-        $this->getJson('/api/dashboard', $headers)
+        $this->getJson('/api/v1/dashboard', $headers)
             ->assertOk()
             ->assertJsonPath('data.total_income', 5000000)
             ->assertJsonPath('data.total_expense', 65000)
@@ -137,13 +130,13 @@ class ZakuApiTest extends TestCase
             ->assertJsonPath('data.top_spending_category.percentage', 100)
             ->assertJsonCount(2, 'data.recent_transactions');
 
-        $this->getJson('/api/transactions?filter=MAKANAN', $headers)
+        $this->getJson('/api/v1/transactions?filter=MAKANAN', $headers)
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.groups.0.transactions.0.category_name', 'MAKANAN')
             ->assertJsonPath('data.meta.total', 1);
 
-        $this->postJson('/api/transactions/chat', [
+        $this->postJson('/api/v1/transactions/chat', [
             'message' => 'Beli kopi di Starbucks 65 ribu',
         ], $headers)
             ->assertCreated()
@@ -151,7 +144,7 @@ class ZakuApiTest extends TestCase
             ->assertJsonPath('data.parsed_data.category', 'MAKANAN')
             ->assertJsonPath('data.parsed_data.type', 'expense');
 
-        $this->postJson('/api/ai/chat', [
+        $this->postJson('/api/v1/ai/chat', [
             'message' => 'Beli makan siang 35rb',
         ], $headers)
             ->assertOk()
@@ -171,7 +164,7 @@ class ZakuApiTest extends TestCase
                 ],
             ]);
 
-        $this->postJson('/api/ai/chat', [
+        $this->postJson('/api/v1/ai/chat', [
             'message' => 'Beli makan siang',
         ], $headers)
             ->assertOk()
@@ -230,7 +223,7 @@ class ZakuApiTest extends TestCase
             ]),
         ]);
 
-        $this->postJson('/api/ai/chat', [
+        $this->postJson('/api/v1/ai/chat', [
             'message' => 'Beli makan siang 35rb',
         ], $headers)
             ->assertOk()
@@ -241,7 +234,7 @@ class ZakuApiTest extends TestCase
 
         Http::assertSentCount(1);
 
-        $this->postJson('/api/ai/chat', [
+        $this->postJson('/api/v1/ai/chat', [
             'message' => 'Gaji freelance 1 juta',
         ], $headers)
             ->assertOk()
@@ -262,7 +255,7 @@ class ZakuApiTest extends TestCase
             'monthly_budget' => 100000,
         ]);
 
-        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 0, 'status' => Wallet::STATUS_ACTIVE]);
 
         $food = Category::where('name', 'MAKANAN')->first();
 
@@ -289,7 +282,7 @@ class ZakuApiTest extends TestCase
             'transaction_date' => now(),
         ]);
 
-        $response = $this->getJson('/api/insights', $this->authHeaders($user))
+        $response = $this->getJson('/api/v1/insights', $this->authHeaders($user))
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonStructure(['data']);
@@ -307,7 +300,7 @@ class ZakuApiTest extends TestCase
         $user = User::factory()->create([
             'email' => 'sender@example.com',
         ]);
-        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 1000000, 'status' => Wallet::STATUS_ACTIVE]);
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 1000000, 'status' => Wallet::STATUS_ACTIVE]);
         $food = Category::where('name', 'MAKANAN')->firstOrFail();
 
         $transaction = Transaction::create([
@@ -323,7 +316,7 @@ class ZakuApiTest extends TestCase
 
         $headers = $this->authHeaders($user);
 
-        $this->postJson('/api/transactions', [
+        $this->postJson('/api/v1/transactions', [
             'type' => 'income',
             'amount' => 250000,
             'description' => 'Fee konsultasi',
@@ -336,14 +329,14 @@ class ZakuApiTest extends TestCase
             ->assertJsonPath('data.amount', 250000)
             ->assertJsonPath('data.category_name', 'GAJI');
 
-        $this->getJson("/api/transactions/{$transaction->id}", $headers)
+        $this->getJson("/api/v1/transactions/{$transaction->id}", $headers)
             ->assertOk()
             ->assertJsonPath('status', 'success')
             ->assertJsonPath('data.amount', 35000)
             ->assertJsonPath('data.category', 'MAKANAN');
 
         $otherUser = User::factory()->create();
-        $otherWallet = Wallet::create(['user_id' => $otherUser->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
+        $otherWallet = Wallet::create(['user_id' => $otherUser->id, 'balance_cents' => 0, 'status' => Wallet::STATUS_ACTIVE]);
         $otherTransaction = Transaction::create([
             'wallet_id' => $otherWallet->id,
             'category_id' => $food->id,
@@ -355,54 +348,55 @@ class ZakuApiTest extends TestCase
             'transaction_date' => now(),
         ]);
 
-        $this->getJson("/api/transactions/{$otherTransaction->id}", $headers)
+        $this->getJson("/api/v1/transactions/{$otherTransaction->id}", $headers)
             ->assertNotFound()
             ->assertJsonPath('success', false);
 
-        $this->deleteJson("/api/transactions/{$otherTransaction->id}", [], $headers)
+        $this->deleteJson("/api/v1/transactions/{$otherTransaction->id}", [], $headers)
             ->assertNotFound()
             ->assertJsonPath('success', false);
 
-        $this->getJson('/api/transactions/stats', $headers)
+        $this->getJson('/api/v1/transactions/stats', $headers)
             ->assertOk()
             ->assertJsonPath('data.total', 2)
             ->assertJsonPath('data.biggest', 250000)
             ->assertJsonPath('data.categories', 2);
 
-        $this->getJson('/api/transactions/categories', $headers)
+        $this->getJson('/api/v1/transactions/categories', $headers)
             ->assertOk()
             ->assertJsonPath('data.0.name', 'MAKANAN')
             ->assertJsonPath('data.0.amount', 35000);
 
-        $this->getJson('/api/transactions?limit=1', $headers)
+        $this->getJson('/api/v1/transactions?limit=1', $headers)
             ->assertOk()
             ->assertJsonCount(1, 'data.groups.0.transactions')
             ->assertJsonPath('data.meta.limit', 1)
             ->assertJsonPath('data.meta.has_more', true);
 
-        $this->getJson('/api/wallet/balance', $headers)->assertNotFound();
-        $this->postJson('/api/wallet/topup', ['amount' => 100000], $headers)->assertNotFound();
-        $this->postJson('/api/wallet/withdraw', ['amount' => 200000], $headers)->assertNotFound();
-        $this->postJson('/api/wallet/send', ['amount' => 50000], $headers)->assertNotFound();
+        $this->getJson('/api/v1/wallet/balance', $headers)->assertNotFound();
+        $this->postJson('/api/v1/wallet/topup', ['amount' => 100000], $headers)->assertNotFound();
+        $this->postJson('/api/v1/wallet/withdraw', ['amount' => 200000], $headers)->assertNotFound();
+        $this->postJson('/api/v1/wallet/send', ['amount' => 50000], $headers)->assertNotFound();
 
-        $this->deleteJson("/api/transactions/{$transaction->id}", [], $headers)
+        $this->deleteJson("/api/v1/transactions/{$transaction->id}", [], $headers)
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.id', $transaction->id)
             ->assertJsonPath('data.balance', 1285000);
 
-        $this->assertDatabaseMissing('transactions', [
+        $this->assertDatabaseHas('transactions', [
             'id' => $transaction->id,
         ]);
+        $this->assertNotNull(Transaction::withTrashed()->find($transaction->id)?->deleted_at, 'Transaction should be soft-deleted');
 
         $wallet->refresh();
-        $this->assertSame('1285000.00', $wallet->balance);
+        $this->assertSame(1285000, $wallet->balance_cents);
     }
 
     public function test_update_transaction_description_only(): void
     {
         $user = User::factory()->create();
-        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 100000, 'status' => Wallet::STATUS_ACTIVE]);
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 100000, 'status' => Wallet::STATUS_ACTIVE]);
         $food = Category::where('name', 'MAKANAN')->firstOrFail();
 
         $transaction = Transaction::create([
@@ -418,7 +412,7 @@ class ZakuApiTest extends TestCase
 
         $headers = $this->authHeaders($user);
 
-        $this->putJson("/api/transactions/{$transaction->id}", [
+        $this->putJson("/api/v1/transactions/{$transaction->id}", [
             'description' => 'New description',
         ], $headers)
             ->assertOk()
@@ -429,7 +423,7 @@ class ZakuApiTest extends TestCase
     {
         $user = User::factory()->create();
         // wallet balance already reflects original expense of 50000 (starting from 1000000)
-        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 950000, 'status' => Wallet::STATUS_ACTIVE]);
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 950000, 'status' => Wallet::STATUS_ACTIVE]);
         $food = Category::where('name', 'MAKANAN')->firstOrFail();
 
         $transaction = Transaction::create([
@@ -445,21 +439,21 @@ class ZakuApiTest extends TestCase
 
         $headers = $this->authHeaders($user);
 
-        $this->putJson("/api/transactions/{$transaction->id}", [
+        $this->putJson("/api/v1/transactions/{$transaction->id}", [
             'amount' => 100000,
         ], $headers)
             ->assertOk()
             ->assertJsonPath('data.amount', 100000);
 
         $wallet->refresh();
-        $this->assertSame('900000.00', $wallet->balance);
+        $this->assertSame(900000, $wallet->balance_cents);
     }
 
     public function test_user_cannot_update_other_users_transaction(): void
     {
         $user = User::factory()->create();
         $other = User::factory()->create();
-        $wallet = Wallet::create(['user_id' => $other->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
+        $wallet = Wallet::create(['user_id' => $other->id, 'balance_cents' => 0, 'status' => Wallet::STATUS_ACTIVE]);
         $food = Category::where('name', 'MAKANAN')->firstOrFail();
 
         $transaction = Transaction::create([
@@ -475,7 +469,7 @@ class ZakuApiTest extends TestCase
 
         $headers = $this->authHeaders($user);
 
-        $this->putJson("/api/transactions/{$transaction->id}", [
+        $this->putJson("/api/v1/transactions/{$transaction->id}", [
             'description' => 'Attempted update',
         ], $headers)
             ->assertNotFound()
@@ -496,7 +490,7 @@ class ZakuApiTest extends TestCase
             'created_at' => now(),
         ]);
 
-        $this->postJson('/api/auth/reset-password', [
+        $this->postJson('/api/v1/auth/reset-password', [
             'email' => $user->email,
             'token' => $token,
             'password' => 'new-password',
@@ -509,11 +503,79 @@ class ZakuApiTest extends TestCase
             'email' => $user->email,
         ]);
 
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/api/v1/auth/login', [
             'email' => $user->email,
             'password' => 'new-password',
         ])->assertOk()
             ->assertJsonPath('status', 'success');
+    }
+
+    public function test_search_transactions_by_keyword_and_date_range(): void
+    {
+        $user = User::factory()->create();
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 1000000, 'status' => Wallet::STATUS_ACTIVE]);
+        $food = Category::where('name', 'MAKANAN')->firstOrFail();
+        $transport = Category::where('name', 'TRANSPORT')->firstOrFail();
+
+        Transaction::create(['wallet_id' => $wallet->id, 'category_id' => $food->id, 'type' => 'expense', 'amount' => 35000, 'description' => 'Makan siang nasi padang', 'status' => 'completed', 'source' => 'manual', 'transaction_date' => now()->subDays(2)]);
+        Transaction::create(['wallet_id' => $wallet->id, 'category_id' => $transport->id, 'type' => 'expense', 'amount' => 20000, 'description' => 'Bensin motor', 'status' => 'completed', 'source' => 'manual', 'transaction_date' => now()]);
+        Transaction::create(['wallet_id' => $wallet->id, 'category_id' => $food->id, 'type' => 'expense', 'amount' => 5000, 'description' => 'Kopi', 'status' => 'completed', 'source' => 'manual', 'transaction_date' => now()->subDays(5)]);
+
+        $headers = $this->authHeaders($user);
+
+        // Search by keyword
+        $this->getJson('/api/v1/transactions?q=bensin', $headers)
+            ->assertOk()
+            ->assertJsonPath('data.meta.total', 1);
+
+        // Search by date range
+        $this->getJson('/api/v1/transactions?date_from=' . now()->subDay()->toDateString() . '&date_to=' . now()->addDay()->toDateString(), $headers)
+            ->assertOk()
+            ->assertJsonPath('data.meta.total', 1);
+
+        // Sort by amount desc
+        $this->getJson('/api/v1/transactions?sort_by=amount&sort_order=desc', $headers)
+            ->assertOk();
+    }
+
+    public function test_activity_log_is_created_on_transaction_operations(): void
+    {
+        $user = User::factory()->create();
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 500000, 'status' => Wallet::STATUS_ACTIVE]);
+        $food = Category::where('name', 'MAKANAN')->firstOrFail();
+        $headers = $this->authHeaders($user);
+
+        // Create — should log
+        $res = $this->postJson('/api/v1/transactions', [
+            'type' => 'expense', 'amount' => 25000, 'description' => 'Test log', 'category' => 'MAKANAN',
+            'transaction_date' => now()->toDateString(),
+        ], $headers)->assertCreated();
+
+        $txId = $res->json('data.id');
+        $this->assertDatabaseHas('activity_logs', [
+            'user_id' => $user->id,
+            'loggable_type' => 'App\Models\Transaction',
+            'event' => 'created',
+            'loggable_id' => $txId,
+        ]);
+
+        // Update — should log
+        $this->putJson("/api/v1/transactions/{$txId}", ['description' => 'Updated test log'], $headers)->assertOk();
+        $this->assertDatabaseHas('activity_logs', [
+            'user_id' => $user->id,
+            'loggable_type' => 'App\Models\Transaction',
+            'event' => 'updated',
+            'loggable_id' => $txId,
+        ]);
+
+        // Delete — should log
+        $this->deleteJson("/api/v1/transactions/{$txId}", [], $headers)->assertOk();
+        $this->assertDatabaseHas('activity_logs', [
+            'user_id' => $user->id,
+            'loggable_type' => 'App\Models\Transaction',
+            'event' => 'deleted',
+            'loggable_id' => $txId,
+        ]);
     }
 
     public function test_password_reset_rejects_invalid_and_expired_tokens(): void
@@ -522,7 +584,7 @@ class ZakuApiTest extends TestCase
             'email' => 'expired-reset@example.com',
         ]);
 
-        $this->postJson('/api/auth/reset-password', [
+        $this->postJson('/api/v1/auth/reset-password', [
             'email' => $user->email,
             'token' => 'missing-token',
             'password' => 'new-password',
@@ -537,7 +599,7 @@ class ZakuApiTest extends TestCase
             'created_at' => now()->subMinutes(120),
         ]);
 
-        $this->postJson('/api/auth/reset-password', [
+        $this->postJson('/api/v1/auth/reset-password', [
             'email' => $user->email,
             'token' => 'expired-token',
             'password' => 'new-password',
@@ -546,7 +608,7 @@ class ZakuApiTest extends TestCase
             ->assertJsonPath('status', 'error')
             ->assertJsonPath('message', 'Password reset token has expired.');
 
-        $this->postJson('/api/auth/reset-password', [
+        $this->postJson('/api/v1/auth/reset-password', [
             'email' => $user->email,
             'token' => 'expired-token',
             'password' => 'short',
@@ -559,7 +621,7 @@ class ZakuApiTest extends TestCase
     public function test_dashboard_does_not_fail_when_categories_table_is_missing(): void
     {
         $user = User::factory()->create();
-        $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 0, 'status' => Wallet::STATUS_ACTIVE]);
 
         Transaction::create([
             'wallet_id' => $wallet->id,
@@ -575,11 +637,97 @@ class ZakuApiTest extends TestCase
         Schema::dropIfExists('categories');
         Schema::enableForeignKeyConstraints();
 
-        $this->getJson('/api/dashboard', $this->authHeaders($user))
+        $this->getJson('/api/v1/dashboard', $this->authHeaders($user))
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.insight_strip.text', 'Catatan bulan ini siap dipantau')
             ->assertJsonPath('data.recent_transactions.0.category_name', 'LAINNYA');
+    }
+
+    public function test_recurring_transactions_crud_and_processing(): void
+    {
+        $user = User::factory()->create(['email' => 'recurring@example.com']);
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 1000000, 'status' => Wallet::STATUS_ACTIVE]);
+        $food = Category::where('name', 'MAKANAN')->firstOrFail();
+        $headers = $this->authHeaders($user);
+
+        // --- Create ---
+        $create = $this->postJson('/api/v1/recurring-transactions', [
+            'type' => 'expense',
+            'amount_cents' => 50000,
+            'description' => 'Langganan kopi bulanan',
+            'category_id' => $food->id,
+            'frequency' => 'monthly',
+            'start_date' => now()->toDateString(),
+        ], $headers);
+
+        $create->assertCreated()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.description', 'Langganan kopi bulanan')
+            ->assertJsonPath('data.amount_cents', 50000)
+            ->assertJsonPath('data.frequency', 'monthly')
+            ->assertJsonPath('data.status', 'active')
+            ->assertJsonPath('data.next_execution_date', now()->toDateString());
+
+        $id = $create->json('data.id');
+
+        // --- List ---
+        $this->getJson('/api/v1/recurring-transactions', $headers)
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $id);
+
+        // --- Show ---
+        $this->getJson("/api/v1/recurring-transactions/{$id}", $headers)
+            ->assertOk()
+            ->assertJsonPath('data.id', $id);
+
+        // --- Update (pause) ---
+        $this->putJson("/api/v1/recurring-transactions/{$id}", [
+            'status' => 'paused',
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('data.status', 'paused');
+
+        // --- Reactivate ---
+        $this->putJson("/api/v1/recurring-transactions/{$id}", [
+            'status' => 'active',
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('data.status', 'active');
+
+        // --- Process command (manually trigger) ---
+        $this->artisan('zaku:process-recurring')
+            ->assertSuccessful();
+
+        // Verify transaction was created
+        $this->assertDatabaseHas('transactions', [
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => 'expense',
+            'amount' => 50000,
+            'description' => 'Langganan kopi bulanan',
+            'source' => 'recurring',
+            'status' => 'completed',
+        ]);
+
+        // Verify recurring moved to next month
+        $recurring = RecurringTransaction::find($id);
+        $this->assertNotNull($recurring);
+        $this->assertEquals(now()->addMonth()->toDateString(), $recurring->next_execution_date->toDateString());
+        $this->assertEquals(now()->toDateString(), $recurring->last_executed_at->toDateString());
+
+        // Verify balance deducted
+        $wallet->refresh();
+        $this->assertEquals(950000, $wallet->balance_cents);
+
+        // --- Delete (cancel) ---
+        $this->deleteJson("/api/v1/recurring-transactions/{$id}", [], $headers)
+            ->assertOk();
+
+        $this->assertDatabaseMissing('recurring_transactions', [
+            'id' => $id,
+            'status' => 'active',
+        ]);
     }
 
     private function authHeaders(User $user): array

@@ -5,12 +5,12 @@
             "key": "baseUrl",
             "type": "string",
             "name": "string",
-            "value": "http:\/\/127.0.0.1:8000"
+            "value": "http:\/\/127.0.0.1:8001"
         }
     ],
     "info": {
         "name": "DOMPET Backend API API Documentation",
-        "_postman_id": "d3112082-4f74-4acd-aa57-445112169cd7",
+        "_postman_id": "87c65161-b035-4e5e-a0ad-9ba4a6b288ed",
         "description": "Dokumentasi endpoint API untuk backend Zaku.",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -24,9 +24,9 @@
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/auth\/register",
+                            "path": "api\/v1\/auth\/register",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/auth\/register"
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/register"
                         },
                         "method": "POST",
                         "header": [
@@ -62,9 +62,9 @@
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/auth\/login",
+                            "path": "api\/v1\/auth\/login",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/auth\/login"
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/login"
                         },
                         "method": "POST",
                         "header": [
@@ -112,9 +112,9 @@
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/auth\/verify-email",
+                            "path": "api\/v1\/auth\/verify-email",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/auth\/verify-email"
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/verify-email"
                         },
                         "method": "POST",
                         "header": [
@@ -156,9 +156,9 @@
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/auth\/resend-verification",
+                            "path": "api\/v1\/auth\/resend-verification",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/auth\/resend-verification"
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/resend-verification"
                         },
                         "method": "POST",
                         "header": [
@@ -194,9 +194,9 @@
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/auth\/forgot-password",
+                            "path": "api\/v1\/auth\/forgot-password",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/auth\/forgot-password"
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/forgot-password"
                         },
                         "method": "POST",
                         "header": [
@@ -232,9 +232,9 @@
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/auth\/change-password",
+                            "path": "api\/v1\/auth\/change-password",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/auth\/change-password"
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/change-password"
                         },
                         "method": "POST",
                         "header": [
@@ -273,9 +273,9 @@
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/auth\/me",
+                            "path": "api\/v1\/auth\/me",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/auth\/me"
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/me"
                         },
                         "method": "GET",
                         "header": [
@@ -301,13 +301,13 @@
                     ]
                 },
                 {
-                    "name": "Refresh JWT token",
+                    "name": "Refresh JWT token (token rotation via blacklist)",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/auth\/refresh",
+                            "path": "api\/v1\/auth\/refresh",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/auth\/refresh"
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/refresh"
                         },
                         "method": "POST",
                         "header": [
@@ -321,7 +321,7 @@
                             }
                         ],
                         "body": null,
-                        "description": "Membuat token JWT baru dan menginvalidasi token lama."
+                        "description": "Menginvalidasi token lama (blacklist) dan mengembalikan token baru.\nAccess token TTL = JWT_TTL (default 1440 menit)."
                     },
                     "response": [
                         {
@@ -337,9 +337,9 @@
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/auth\/logout",
+                            "path": "api\/v1\/auth\/logout",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/auth\/logout"
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/logout"
                         },
                         "method": "POST",
                         "header": [
@@ -371,13 +371,69 @@
             "description": "",
             "item": [
                 {
-                    "name": "POST api\/auth\/reset-password",
+                    "name": "GET api\/v1\/health",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/auth\/reset-password",
+                            "path": "api\/v1\/health",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/auth\/reset-password"
+                            "raw": "{{baseUrl}}\/api\/v1\/health"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "58"
+                                },
+                                {
+                                    "key": "vary",
+                                    "value": "Origin"
+                                }
+                            ],
+                            "code": 200,
+                            "body": "{\"status\":\"ok\",\"timestamp\":\"2026-07-02T03:53:33+00:00\",\"app\":\"DOMPET Backend API\",\"version\":\"1.0.0\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "POST api\/v1\/auth\/reset-password",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/auth\/reset-password",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/auth\/reset-password"
                         },
                         "method": "POST",
                         "header": [
@@ -402,195 +458,13 @@
                     "response": []
                 },
                 {
-                    "name": "GET api\/user\/profile",
+                    "name": "GET api\/v1\/user\/profile",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/user\/profile",
+                            "path": "api\/v1\/user\/profile",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/user\/profile"
-                        },
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": null,
-                        "description": "",
-                        "auth": {
-                            "type": "noauth"
-                        }
-                    },
-                    "response": [
-                        {
-                            "header": [
-                                {
-                                    "key": "www-authenticate",
-                                    "value": "jwt-auth"
-                                },
-                                {
-                                    "key": "cache-control",
-                                    "value": "no-cache, private"
-                                },
-                                {
-                                    "key": "content-type",
-                                    "value": "application\/json"
-                                },
-                                {
-                                    "key": "x-ratelimit-limit",
-                                    "value": "60"
-                                },
-                                {
-                                    "key": "x-ratelimit-remaining",
-                                    "value": "59"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
-                                }
-                            ],
-                            "code": 401,
-                            "body": "{\n    \"message\": \"Token not provided\"\n}",
-                            "name": ""
-                        }
-                    ]
-                },
-                {
-                    "name": "PUT api\/user\/profile",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/user\/profile",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/user\/profile"
-                        },
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"name\":\"Budi Santoso\",\"email\":\"budi@example.com\"}"
-                        },
-                        "description": "",
-                        "auth": {
-                            "type": "noauth"
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "PUT api\/user\/budget",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/user\/budget",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/user\/budget"
-                        },
-                        "method": "PUT",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"monthly_budget\":3000000}"
-                        },
-                        "description": "",
-                        "auth": {
-                            "type": "noauth"
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "GET api\/dashboard",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/dashboard",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/dashboard"
-                        },
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": null,
-                        "description": "",
-                        "auth": {
-                            "type": "noauth"
-                        }
-                    },
-                    "response": [
-                        {
-                            "header": [
-                                {
-                                    "key": "www-authenticate",
-                                    "value": "jwt-auth"
-                                },
-                                {
-                                    "key": "cache-control",
-                                    "value": "no-cache, private"
-                                },
-                                {
-                                    "key": "content-type",
-                                    "value": "application\/json"
-                                },
-                                {
-                                    "key": "x-ratelimit-limit",
-                                    "value": "60"
-                                },
-                                {
-                                    "key": "x-ratelimit-remaining",
-                                    "value": "58"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
-                                }
-                            ],
-                            "code": 401,
-                            "body": "{\n    \"message\": \"Token not provided\"\n}",
-                            "name": ""
-                        }
-                    ]
-                },
-                {
-                    "name": "GET api\/transactions",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/transactions",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/transactions"
+                            "raw": "{{baseUrl}}\/api\/v1\/user\/profile"
                         },
                         "method": "GET",
                         "header": [
@@ -644,15 +518,15 @@
                     ]
                 },
                 {
-                    "name": "POST api\/transactions",
+                    "name": "PUT api\/v1\/user\/profile",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/transactions",
+                            "path": "api\/v1\/user\/profile",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/transactions"
+                            "raw": "{{baseUrl}}\/api\/v1\/user\/profile"
                         },
-                        "method": "POST",
+                        "method": "PUT",
                         "header": [
                             {
                                 "key": "Content-Type",
@@ -665,7 +539,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"type\":\"expense\",\"amount\":65000,\"description\":\"Beli kopi\",\"category\":\"MAKANAN\",\"transaction_date\":\"2026-05-20\"}"
+                            "raw": "{\"name\":\"Budi Santoso\",\"email\":\"budi@example.com\"}"
                         },
                         "description": "",
                         "auth": {
@@ -675,13 +549,44 @@
                     "response": []
                 },
                 {
-                    "name": "GET api\/transactions\/stats",
+                    "name": "PUT api\/v1\/user\/budget",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/transactions\/stats",
+                            "path": "api\/v1\/user\/budget",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/transactions\/stats"
+                            "raw": "{{baseUrl}}\/api\/v1\/user\/budget"
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"monthly_budget\":3000000}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET api\/v1\/dashboard",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/dashboard",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/dashboard"
                         },
                         "method": "GET",
                         "header": [
@@ -735,112 +640,13 @@
                     ]
                 },
                 {
-                    "name": "GET api\/transactions\/categories",
+                    "name": "GET api\/v1\/transactions",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/transactions\/categories",
+                            "path": "api\/v1\/transactions",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/transactions\/categories"
-                        },
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": null,
-                        "description": "",
-                        "auth": {
-                            "type": "noauth"
-                        }
-                    },
-                    "response": [
-                        {
-                            "header": [
-                                {
-                                    "key": "www-authenticate",
-                                    "value": "jwt-auth"
-                                },
-                                {
-                                    "key": "cache-control",
-                                    "value": "no-cache, private"
-                                },
-                                {
-                                    "key": "content-type",
-                                    "value": "application\/json"
-                                },
-                                {
-                                    "key": "x-ratelimit-limit",
-                                    "value": "60"
-                                },
-                                {
-                                    "key": "x-ratelimit-remaining",
-                                    "value": "55"
-                                },
-                                {
-                                    "key": "vary",
-                                    "value": "Origin"
-                                }
-                            ],
-                            "code": 401,
-                            "body": "{\n    \"message\": \"Token not provided\"\n}",
-                            "name": ""
-                        }
-                    ]
-                },
-                {
-                    "name": "POST api\/ai\/chat",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/ai\/chat",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/ai\/chat"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\"message\":\"Beli kopi di Starbucks 65 ribu\"}"
-                        },
-                        "description": "",
-                        "auth": {
-                            "type": "noauth"
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "GET api\/transactions\/{id}",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/transactions\/:id",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/transactions\/:id",
-                            "variable": [
-                                {
-                                    "id": "id",
-                                    "key": "id",
-                                    "value": "consequatur",
-                                    "description": "The ID of the transaction."
-                                }
-                            ]
+                            "raw": "{{baseUrl}}\/api\/v1\/transactions"
                         },
                         "method": "GET",
                         "header": [
@@ -894,13 +700,362 @@
                     ]
                 },
                 {
-                    "name": "DELETE api\/transactions\/{id}",
+                    "name": "GET api\/v1\/insights",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/transactions\/:id",
+                            "path": "api\/v1\/insights",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/transactions\/:id",
+                            "raw": "{{baseUrl}}\/api\/v1\/insights"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "www-authenticate",
+                                    "value": "jwt-auth"
+                                },
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "52"
+                                },
+                                {
+                                    "key": "vary",
+                                    "value": "Origin"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\n    \"message\": \"Token not provided\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "POST api\/v1\/transactions",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/transactions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/transactions"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"type\":\"expense\",\"amount\":65000,\"description\":\"Beli kopi\",\"category\":\"MAKANAN\",\"transaction_date\":\"2026-05-20\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "PUT api\/v1\/transactions\/{id}",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/transactions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/transactions\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "consequatur",
+                                    "description": "The ID of the transaction."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"type\":\"expense\",\"amount\":50000,\"description\":\"Makan siang\",\"category\":\"MAKANAN\",\"transaction_date\":\"2026-06-01\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET api\/v1\/transactions\/stats",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/transactions\/stats",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/transactions\/stats"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "www-authenticate",
+                                    "value": "jwt-auth"
+                                },
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "50"
+                                },
+                                {
+                                    "key": "vary",
+                                    "value": "Origin"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\n    \"message\": \"Token not provided\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "GET api\/v1\/transactions\/categories",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/transactions\/categories",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/transactions\/categories"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "www-authenticate",
+                                    "value": "jwt-auth"
+                                },
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "49"
+                                },
+                                {
+                                    "key": "vary",
+                                    "value": "Origin"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\n    \"message\": \"Token not provided\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "POST api\/v1\/ai\/chat",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/ai\/chat",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/ai\/chat"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"message\":\"Beli kopi di Starbucks 65 ribu\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET api\/v1\/transactions\/{id}",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/transactions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/transactions\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "consequatur",
+                                    "description": "The ID of the transaction."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "www-authenticate",
+                                    "value": "jwt-auth"
+                                },
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "47"
+                                },
+                                {
+                                    "key": "vary",
+                                    "value": "Origin"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\n    \"message\": \"Token not provided\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "DELETE api\/v1\/transactions\/{id}",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/transactions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/transactions\/:id",
                             "variable": [
                                 {
                                     "id": "id",
@@ -930,13 +1085,13 @@
                     "response": []
                 },
                 {
-                    "name": "POST api\/transactions\/chat",
+                    "name": "POST api\/v1\/transactions\/chat",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/transactions\/chat",
+                            "path": "api\/v1\/transactions\/chat",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/transactions\/chat"
+                            "raw": "{{baseUrl}}\/api\/v1\/transactions\/chat"
                         },
                         "method": "POST",
                         "header": [
@@ -959,6 +1114,308 @@
                         }
                     },
                     "response": []
+                },
+                {
+                    "name": "GET api\/v1\/recurring-transactions",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/recurring-transactions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/recurring-transactions"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "www-authenticate",
+                                    "value": "jwt-auth"
+                                },
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "46"
+                                },
+                                {
+                                    "key": "vary",
+                                    "value": "Origin"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\n    \"message\": \"Token not provided\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "POST api\/v1\/recurring-transactions",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/recurring-transactions",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/recurring-transactions"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"type\":\"expense\",\"amount_cents\":45,\"description\":\"Amet iste laborum eius est dolor dolores.\",\"frequency\":\"yearly\",\"interval_value\":4,\"start_date\":\"2107-07-31\",\"end_date\":\"2107-07-31\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET api\/v1\/recurring-transactions\/{id}",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/recurring-transactions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/recurring-transactions\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "17",
+                                    "description": "The ID of the recurring transaction."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "www-authenticate",
+                                    "value": "jwt-auth"
+                                },
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "application\/json"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "44"
+                                },
+                                {
+                                    "key": "vary",
+                                    "value": "Origin"
+                                }
+                            ],
+                            "code": 401,
+                            "body": "{\n    \"message\": \"Token not provided\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "PUT api\/v1\/recurring-transactions\/{id}",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/recurring-transactions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/recurring-transactions\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "17",
+                                    "description": "The ID of the recurring transaction."
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"type\":\"expense\",\"amount_cents\":45,\"description\":\"Amet iste laborum eius est dolor dolores.\",\"frequency\":\"yearly\",\"interval_value\":4,\"start_date\":\"2026-07-02T03:53:44\",\"end_date\":\"2107-07-31\",\"status\":\"active\"}"
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "DELETE api\/v1\/recurring-transactions\/{id}",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/v1\/recurring-transactions\/:id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/v1\/recurring-transactions\/:id",
+                            "variable": [
+                                {
+                                    "id": "id",
+                                    "key": "id",
+                                    "value": "17",
+                                    "description": "The ID of the recurring transaction."
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "GET api\/{path}",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/:path",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/:path",
+                            "variable": [
+                                {
+                                    "id": "path",
+                                    "key": "path",
+                                    "value": "2UZ5i",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [
+                                {
+                                    "key": "cache-control",
+                                    "value": "no-cache, private"
+                                },
+                                {
+                                    "key": "location",
+                                    "value": "http:\/\/127.0.0.1:8001\/api\/v1\/2UZ5i"
+                                },
+                                {
+                                    "key": "content-type",
+                                    "value": "text\/html; charset=utf-8"
+                                },
+                                {
+                                    "key": "x-ratelimit-limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "x-ratelimit-remaining",
+                                    "value": "43"
+                                },
+                                {
+                                    "key": "vary",
+                                    "value": "Origin"
+                                }
+                            ],
+                            "code": 302,
+                            "body": "<!DOCTYPE html>\n<html>\n    <head>\n        <meta charset=\"UTF-8\" \/>\n        <meta http-equiv=\"refresh\" content=\"0;url='http:\/\/127.0.0.1:8001\/api\/v1\/2UZ5i'\" \/>\n\n        <title>Redirecting to http:\/\/127.0.0.1:8001\/api\/v1\/2UZ5i<\/title>\n    <\/head>\n    <body>\n        Redirecting to <a href=\"http:\/\/127.0.0.1:8001\/api\/v1\/2UZ5i\">http:\/\/127.0.0.1:8001\/api\/v1\/2UZ5i<\/a>.\n    <\/body>\n<\/html>",
+                            "name": ""
+                        }
+                    ]
                 }
             ]
         }

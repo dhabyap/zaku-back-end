@@ -18,12 +18,12 @@ class Wallet extends Model
 
     protected $fillable = [
         'user_id',
-        'balance',
+        'balance_cents',
         'status',
     ];
 
     protected $casts = [
-        'balance' => 'decimal:2',
+        'balance_cents' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -36,30 +36,30 @@ class Wallet extends Model
         return $this->hasMany(Transaction::class);
     }
 
-    public function addBalance(float|int|string $amount): bool
+    public function addBalance(int $amountCents): bool
     {
-        $this->assertPositiveAmount($amount);
-        $this->balance = number_format(((float) $this->balance) + ((float) $amount), 2, '.', '');
+        $this->assertPositiveAmount($amountCents);
+        $this->balance_cents += $amountCents;
 
         return $this->save();
     }
 
-    public function deductBalance(float|int|string $amount): bool
+    public function deductBalance(int $amountCents): bool
     {
-        $this->assertPositiveAmount($amount);
+        $this->assertPositiveAmount($amountCents);
 
-        if (((float) $this->balance) < ((float) $amount)) {
+        if ($this->balance_cents < $amountCents) {
             throw new InvalidArgumentException('Insufficient wallet balance.');
         }
 
-        $this->balance = number_format(((float) $this->balance) - ((float) $amount), 2, '.', '');
+        $this->balance_cents -= $amountCents;
 
         return $this->save();
     }
 
     public function getAvailableBalance(): string
     {
-        return (string) $this->balance;
+        return (string) $this->balance_cents;
     }
 
     public function isActive(): bool
@@ -67,9 +67,9 @@ class Wallet extends Model
         return $this->status === self::STATUS_ACTIVE;
     }
 
-    private function assertPositiveAmount(float|int|string $amount): void
+    private function assertPositiveAmount(int $amount): void
     {
-        if (! is_numeric($amount) || ((float) $amount) <= 0) {
+        if ($amount <= 0) {
             throw new InvalidArgumentException('Amount must be greater than zero.');
         }
     }

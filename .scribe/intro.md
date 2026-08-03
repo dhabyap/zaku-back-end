@@ -3,7 +3,7 @@
 Dokumentasi endpoint API untuk backend Zaku.
 
 <aside>
-    <strong>Base URL</strong>: <code>http://127.0.0.1:8000</code>
+    <strong>Base URL</strong>: <code>http://127.0.0.1:8001</code>
 </aside>
 
     Gunakan dokumentasi ini untuk mencoba endpoint API langsung dari browser, menyalin contoh request, atau mengunduh Postman collection dan OpenAPI spec.

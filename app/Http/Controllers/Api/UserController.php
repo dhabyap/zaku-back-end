@@ -19,6 +19,14 @@ class UserController extends Controller
     {
         $user = $request->user();
         $budget = (int) $user->monthly_budget;
+
+        $stats = $this->transactions($user->id)
+            ->selectRaw('count(*) as total')
+            ->selectRaw("count(case when transaction_date >= ? then 1 end) as this_month", [now()->startOfMonth()])
+            ->selectRaw('max(amount) as biggest')
+            ->selectRaw('count(distinct category_id) as categories')
+            ->first();
+
         $budgetUsed = (int) $this->transactions($user->id)
             ->where('type', Transaction::TYPE_EXPENSE)
             ->whereBetween('transaction_date', [now()->startOfMonth(), now()->endOfMonth()])
@@ -30,15 +38,10 @@ class UserController extends Controller
             'avatar_initial' => strtoupper(substr((string) $user->full_name, 0, 1)),
             'member_status' => 'MEMBER AKTIF',
             'stats' => [
-                'total_transactions' => $this->transactions($user->id)->count(),
-                'transactions_this_month' => $this->transactions($user->id)
-                    ->whereBetween('transaction_date', [now()->startOfMonth(), now()->endOfMonth()])
-                    ->count(),
-                'largest_transaction_amount' => (int) $this->transactions($user->id)->max('amount'),
-                'unique_categories_used' => (int) $this->transactions($user->id)
-                    ->whereNotNull('category_id')
-                    ->distinct('category_id')
-                    ->count('category_id'),
+                'total_transactions' => (int) $stats->total,
+                'transactions_this_month' => (int) $stats->this_month,
+                'largest_transaction_amount' => (int) $stats->biggest,
+                'unique_categories_used' => (int) $stats->categories,
             ],
             'budget' => [
                 'monthly_budget' => $budget,

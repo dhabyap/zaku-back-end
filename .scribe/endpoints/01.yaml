@@ -1,19 +1,19 @@
-name: API
+name: Authentication
 description: ''
 endpoints:
   -
     custom: []
     httpMethods:
       - POST
-    uri: api/auth/reset-password
+    uri: api/v1/auth/register
     metadata:
       custom: []
-      groupName: API
+      groupName: Authentication
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
-      description: ''
+      title: 'Register user'
+      description: 'Membuat user baru, ledger internal, kode verifikasi email, dan JWT token.'
       authenticated: false
       deprecated: false
     headers:
@@ -27,7 +27,211 @@ endpoints:
       email:
         custom: []
         name: email
-        description: 'Email user yang meminta reset password. Must be a valid email address.'
+        description: 'Email user.'
+        required: true
+        example: user@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Minimal 8 karakter.'
+        required: true
+        example: password123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'This field is required when <code>full_name</code> is not present. Must not be greater than 255 characters.'
+        required: false
+        example: vmqeopfuudtdsufvyvddq
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      full_name:
+        custom: []
+        name: full_name
+        description: 'Nama lengkap user.'
+        required: true
+        example: 'John Doe'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      phone_number:
+        custom: []
+        name: phone_number
+        description: 'Nomor telepon opsional.'
+        required: false
+        example: '08123456789'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      email: user@example.com
+      password: password123
+      name: vmqeopfuudtdsufvyvddq
+      full_name: 'John Doe'
+      phone_number: '08123456789'
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "status": "success",
+            "message": "User registered successfully",
+            "data": {
+              "user": {
+                "id": 1,
+                "full_name": "John Doe",
+                "email": "user@example.com",
+                "avatar_initial": "J"
+              },
+              "token": "jwt_token_here"
+            }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/login
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Login user'
+      description: 'Mengautentikasi user yang email-nya sudah diverifikasi dan mengembalikan JWT token.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email user.'
+        required: true
+        example: user@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Password user.'
+        required: true
+        example: password123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: user@example.com
+      password: password123
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": "success",
+            "message": "Login successful",
+            "data": {
+              "token": "jwt_token_here",
+              "user": {
+                "id": 1,
+                "full_name": "John Doe",
+                "email": "user@example.com",
+                "is_verified": true
+              }
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: |-
+          {
+            "status": "error",
+            "message": "Invalid credentials."
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "status": "error",
+            "message": "Email address is not verified."
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/verify-email
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Verify email'
+      description: 'Memvalidasi kode verifikasi dan menandai email user sebagai terverifikasi.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Email user yang akan diverifikasi. Must be a valid email address.'
         required: true
         example: user@example.com
         type: string
@@ -35,80 +239,54 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      token:
+      code:
         custom: []
-        name: token
-        description: 'Token reset password dari email atau log.'
+        name: code
+        description: 'Kode verifikasi 6 digit dari email/log.'
         required: true
-        example: reset-token
+        example: '123456'
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
-      password:
+      user_id:
         custom: []
-        name: password
-        description: 'Password baru minimal 8 karakter. Must be at least 8 characters.'
+        name: user_id
+        description: 'ID user yang akan diverifikasi.'
         required: true
-        example: password123
-        type: string
+        example: 1
+        type: integer
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanBodyParameters:
       email: user@example.com
-      token: reset-token
-      password: password123
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/user/profile
-    metadata:
-      custom: []
-      groupName: API
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+      code: '123456'
+      user_id: 1
     fileParameters: []
     responses:
       -
         custom: []
-        status: 401
+        status: 200
         content: |-
           {
-              "message": "Token not provided"
+            "status": "success",
+            "message": "Email verified successfully"
           }
-        headers:
-          www-authenticate: jwt-auth
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '59'
-          vary: Origin
-        description: null
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "status": "error",
+            "message": "Verification code has expired."
+          }
+        headers: []
+        description: ''
     responseFields: []
     auth: []
     controller: null
@@ -117,16 +295,16 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - PUT
-    uri: api/user/profile
+      - POST
+    uri: api/v1/auth/resend-verification
     metadata:
       custom: []
-      groupName: API
+      groupName: Authentication
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
-      description: ''
+      title: 'Resend verification code'
+      description: 'Mengirim ulang kode verifikasi untuk user yang belum terverifikasi.'
       authenticated: false
       deprecated: false
     headers:
@@ -137,168 +315,31 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      name:
-        custom: []
-        name: name
-        description: 'Nama lengkap user. Must not be greater than 255 characters.'
-        required: true
-        example: 'Budi Santoso'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
       email:
         custom: []
         name: email
-        description: 'Email unik user. Must be a valid email address. Must not be greater than 255 characters.'
+        description: 'Email user.'
         required: true
-        example: budi@example.com
+        example: user@example.com
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      name: 'Budi Santoso'
-      email: budi@example.com
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PUT
-    uri: api/user/budget
-    metadata:
-      custom: []
-      groupName: API
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      monthly_budget:
-        custom: []
-        name: monthly_budget
-        description: 'Budget bulanan dalam integer IDR. Must be at least 0.'
-        required: true
-        example: 3000000
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      monthly_budget: 3000000
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/dashboard
-    metadata:
-      custom: []
-      groupName: API
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+      email: user@example.com
     fileParameters: []
     responses:
       -
         custom: []
-        status: 401
+        status: 200
         content: |-
           {
-              "message": "Token not provided"
+            "status": "success",
+            "message": "Verification code sent to your email"
           }
-        headers:
-          www-authenticate: jwt-auth
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '58'
-          vary: Origin
-        description: null
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/transactions
-    metadata:
-      custom: []
-      groupName: API
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: |-
-          {
-              "message": "Token not provided"
-          }
-        headers:
-          www-authenticate: jwt-auth
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '57'
-          vary: Origin
-        description: null
+        headers: []
+        description: ''
     responseFields: []
     auth: []
     controller: null
@@ -308,15 +349,15 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/transactions
+    uri: api/v1/auth/forgot-password
     metadata:
       custom: []
-      groupName: API
+      groupName: Authentication
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
-      description: ''
+      title: 'Forgot password'
+      description: 'Membuat token reset password dan mengirimkannya ke email user.'
       authenticated: false
       deprecated: false
     headers:
@@ -327,163 +368,31 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      type:
+      email:
         custom: []
-        name: type
-        description: 'Jenis transaksi.'
+        name: email
+        description: 'Email user.'
         required: true
-        example: expense
-        type: string
-        enumValues:
-          - income
-          - expense
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      amount:
-        custom: []
-        name: amount
-        description: 'Nominal transaksi.'
-        required: true
-        example: 65000
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      description:
-        custom: []
-        name: description
-        description: 'Deskripsi transaksi. Must not be greater than 1000 characters.'
-        required: true
-        example: 'Beli kopi'
+        example: user@example.com
         type: string
         enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      category:
-        custom: []
-        name: category
-        description: 'Nama kategori transaksi. The <code>name</code> of an existing record in the categories table.'
-        required: true
-        example: MAKANAN
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      transaction_date:
-        custom: []
-        name: transaction_date
-        description: 'Tanggal transaksi. Must be a valid date.'
-        required: false
-        example: '2026-05-20'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      type: expense
-      amount: 65000
-      description: 'Beli kopi'
-      category: MAKANAN
-      transaction_date: '2026-05-20'
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/transactions/stats
-    metadata:
-      custom: []
-      groupName: API
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+      email: user@example.com
     fileParameters: []
     responses:
       -
         custom: []
-        status: 401
+        status: 200
         content: |-
           {
-              "message": "Token not provided"
+            "status": "success",
+            "message": "Password reset link sent to your email"
           }
-        headers:
-          www-authenticate: jwt-auth
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '56'
-          vary: Origin
-        description: null
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/transactions/categories
-    metadata:
-      custom: []
-      groupName: API
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: |-
-          {
-              "message": "Token not provided"
-          }
-        headers:
-          www-authenticate: jwt-auth
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '55'
-          vary: Origin
-        description: null
+        headers: []
+        description: ''
     responseFields: []
     auth: []
     controller: null
@@ -493,18 +402,19 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/ai/chat
+    uri: api/v1/auth/change-password
     metadata:
       custom: []
-      groupName: API
+      groupName: Authentication
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
+      title: 'Change password'
+      description: 'Mengubah password user yang sedang login. Endpoint ini membutuhkan JWT Bearer token.'
+      authenticated: true
       deprecated: false
     headers:
+      Authorization: 'Bearer {YOUR_JWT_TOKEN}'
       Content-Type: application/json
       Accept: application/json
     urlParameters: []
@@ -512,23 +422,70 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      message:
+      old_password:
         custom: []
-        name: message
-        description: 'Input teks natural language untuk dicatat sebagai transaksi. Must be at least 3 characters. Must not be greater than 500 characters.'
+        name: old_password
+        description: 'Password lama.'
         required: true
-        example: 'Beli kopi di Starbucks 65 ribu'
+        example: password123
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      new_password:
+        custom: []
+        name: new_password
+        description: 'Password baru minimal 8 karakter.'
+        required: true
+        example: password456
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      new_password_confirmation:
+        custom: []
+        name: new_password_confirmation
+        description: 'Konfirmasi password baru.'
+        required: true
+        example: password456
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      message: 'Beli kopi di Starbucks 65 ribu'
+      old_password: password123
+      new_password: password456
+      new_password_confirmation: password456
     fileParameters: []
-    responses: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": "success",
+            "message": "Password changed successfully"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: |-
+          {
+            "status": "error",
+            "message": "Authorization token is required."
+          }
+        headers: []
+        description: ''
     responseFields: []
-    auth: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
     controller: null
     method: null
     route: null
@@ -536,34 +493,23 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/transactions/{id}'
+    uri: api/v1/auth/me
     metadata:
       custom: []
-      groupName: API
+      groupName: Authentication
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
+      title: 'Get authenticated user profile'
+      description: 'Mengambil data profil user yang sedang login.'
+      authenticated: true
       deprecated: false
     headers:
+      Authorization: 'Bearer {YOUR_JWT_TOKEN}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the transaction.'
-        required: true
-        example: consequatur
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: consequatur
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -572,64 +518,23 @@ endpoints:
     responses:
       -
         custom: []
-        status: 401
+        status: 200
         content: |-
           {
-              "message": "Token not provided"
+            "status": "success",
+            "data": {
+              "id": 1,
+              "name": "John Doe",
+              "email": "user@example.com"
+            }
           }
-        headers:
-          www-authenticate: jwt-auth
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          x-ratelimit-limit: '60'
-          x-ratelimit-remaining: '54'
-          vary: Origin
-        description: null
+        headers: []
+        description: ''
     responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - DELETE
-    uri: 'api/transactions/{id}'
-    metadata:
-      custom: []
-      groupName: API
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the transaction.'
-        required: true
-        example: consequatur
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: consequatur
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
     controller: null
     method: null
     route: null
@@ -637,42 +542,94 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/transactions/chat
+    uri: api/v1/auth/refresh
     metadata:
       custom: []
-      groupName: API
+      groupName: Authentication
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: false
+      title: 'Refresh JWT token (token rotation via blacklist)'
+      description: |-
+        Menginvalidasi token lama (blacklist) dan mengembalikan token baru.
+        Access token TTL = JWT_TTL (default 1440 menit).
+      authenticated: true
       deprecated: false
     headers:
+      Authorization: 'Bearer {YOUR_JWT_TOKEN}'
       Content-Type: application/json
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters:
-      message:
-        custom: []
-        name: message
-        description: 'Input teks natural language untuk dicatat sebagai transaksi. Must be at least 3 characters. Must not be greater than 500 characters.'
-        required: true
-        example: 'Beli kopi di Starbucks 65 ribu'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      message: 'Beli kopi di Starbucks 65 ribu'
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
-    responses: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": "success",
+            "data": {
+              "access_token": "jwt_token_here",
+              "refresh_token": "jwt_token_here"
+            }
+          }
+        headers: []
+        description: ''
     responseFields: []
-    auth: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/logout
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Logout user'
+      description: 'Menginvalidasi token JWT yang sedang digunakan.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_JWT_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "status": "success",
+            "message": "Successfully logged out"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
     controller: null
     method: null
     route: null
