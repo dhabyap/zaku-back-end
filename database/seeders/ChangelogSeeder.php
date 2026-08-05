@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\Changelog;
 
 class ChangelogSeeder extends Seeder
 {
@@ -93,6 +93,8 @@ class ChangelogSeeder extends Seeder
             ],
         ];
 
-        DB::table('changelogs')->insert($logs);
+        foreach ($logs as $log) {
+            Changelog::create($log);
+        }
     }
 }
