@@ -29,17 +29,26 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::get('/stats/public', function () {
-        $userCount = \App\Models\User::count();
-        $txCount = \App\Models\Transaction::count();
-        $totalAmount = (int) \App\Models\Transaction::sum('amount');
-        $totalIncome = (int) \App\Models\Transaction::where('type', 'income')->sum('amount');
-        $totalExpense = (int) \App\Models\Transaction::where('type', 'expense')->sum('amount');
+        try {
+            $userCount = \App\Models\User::count();
+            $txCount = \App\Models\Transaction::count();
+            $totalAmount = (int) \App\Models\Transaction::sum('amount');
+            $totalIncome = (int) \App\Models\Transaction::where('type', 'income')->sum('amount');
+            $totalExpense = (int) \App\Models\Transaction::where('type', 'expense')->sum('amount');
 
-        // Active users: transacted in last 30 days (join through wallets)
-        $activeUsers = \App\Models\Transaction::where('transaction_date', '>=', now()->subDays(30))
-            ->join('wallets', 'transactions.wallet_id', '=', 'wallets.id')
-            ->distinct('wallets.user_id')
-            ->count('wallets.user_id');
+            // Active users: transacted in last 30 days (join through wallets)
+            $activeUsers = \App\Models\Transaction::where('transaction_date', '>=', now()->subDays(30))
+                ->join('wallets', 'transactions.wallet_id', '=', 'wallets.id')
+                ->distinct('wallets.user_id')
+                ->count('wallets.user_id');
+        } catch (\Throwable $e) {
+            $userCount = 0;
+            $txCount = 0;
+            $totalAmount = 0;
+            $totalIncome = 0;
+            $totalExpense = 0;
+            $activeUsers = 0;
+        }
 
         return response()->json([
             'data' => [
