@@ -35,10 +35,11 @@ Route::prefix('v1')->group(function () {
         $totalIncome = (int) \App\Models\Transaction::where('type', 'income')->sum('amount');
         $totalExpense = (int) \App\Models\Transaction::where('type', 'expense')->sum('amount');
 
-        // Active users: transacted in last 30 days
+        // Active users: transacted in last 30 days (join through wallets)
         $activeUsers = \App\Models\Transaction::where('transaction_date', '>=', now()->subDays(30))
-            ->distinct('user_id')
-            ->count('user_id');
+            ->join('wallets', 'transactions.wallet_id', '=', 'wallets.id')
+            ->distinct('wallets.user_id')
+            ->count('wallets.user_id');
 
         return response()->json([
             'data' => [
