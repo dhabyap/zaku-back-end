@@ -97,13 +97,13 @@ Pilih `yes` jika diminta overwrite `JWT_SECRET`.
 Buat database kosong bernama:
 
 ```text
-zaku_api
+dompet_api
 ```
 
 Contoh lewat MySQL CLI:
 
 ```sql
-CREATE DATABASE zaku_api;
+CREATE DATABASE dompet_api;
 ```
 
 Lalu cek bagian database di `.env`:
@@ -112,7 +112,7 @@ Lalu cek bagian database di `.env`:
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=zaku_api
+DB_DATABASE=dompet_api
 DB_USERNAME=root
 DB_PASSWORD=
 ```
@@ -169,7 +169,7 @@ Gunakan akun ini untuk login dan mendapatkan JWT token.
 Request:
 
 ```http
-POST http://127.0.0.1:8000/api/auth/login
+POST http://127.0.0.1:8000/api/v1/auth/login
 Accept: application/json
 Content-Type: application/json
 ```
@@ -197,7 +197,7 @@ Accept: application/json
 Contoh ambil dashboard:
 
 ```http
-GET http://127.0.0.1:8000/api/dashboard
+GET http://127.0.0.1:8000/api/v1/dashboard
 Authorization: Bearer TOKEN_DARI_LOGIN
 Accept: application/json
 ```
@@ -207,7 +207,7 @@ Accept: application/json
 Base URL local:
 
 ```text
-http://127.0.0.1:8000/api
+http://127.0.0.1:8000/api/v1
 ```
 
 Endpoint public:
@@ -218,7 +218,8 @@ Endpoint public:
 | POST | `/auth/login` | Login dan ambil JWT token |
 | POST | `/auth/verify-email` | Verifikasi email |
 | POST | `/auth/resend-verification` | Kirim ulang kode verifikasi |
-| POST | `/auth/forgot-password` | Minta token reset password |
+|| POST | `/auth/forgot-password` | Minta token reset password |
+|| GET | `/stats/public` | Statistik publik untuk landing page |
 
 Endpoint yang membutuhkan JWT token:
 
@@ -239,7 +240,8 @@ Endpoint yang membutuhkan JWT token:
 | GET | `/transactions/{id}` | Detail transaksi |
 | DELETE | `/transactions/{id}` | Hapus transaksi |
 | POST | `/transactions/chat` | Catat transaksi dari pesan chat parser local |
-| POST | `/ai/chat` | Catat transaksi dari chat dengan AI/fallback local |
+|| POST | `/ai/chat` | Catat transaksi dari chat dengan AI/fallback local |
+|| GET | `/changelogs` | Daftar changelog |
 
 Dokumentasi lengkap dengan contoh request/response ada di `/docs`.
 
@@ -257,7 +259,7 @@ SCRIBE_BASE_URL=http://127.0.0.1:8000
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=zaku_api
+DB_DATABASE=dompet_api
 DB_USERNAME=root
 DB_PASSWORD=
 
@@ -285,8 +287,8 @@ Dengan `MAIL_MAILER=log`, isi email akan masuk ke file log Laravel, bukan dikiri
 
 Ada dua endpoint chat:
 
-- `/api/transactions/chat`: parser local, tidak butuh API key AI.
-- `/api/ai/chat`: mencoba AI provider jika API key tersedia, lalu fallback ke parser local.
+- `/api/v1/transactions/chat`: parser local, tidak butuh API key AI.
+- `/api/v1/ai/chat`: mencoba AI provider jika API key tersedia, lalu fallback ke parser local.
 
 Konfigurasi opsional:
 
@@ -299,6 +301,8 @@ GEMINI_MODEL=gemini-2.0-flash
 
 Untuk local minimal, bagian ini boleh dikosongkan.
 
+AI parser juga menangani bahasa Indonesia informal: dapat/dapet/dpt = income. Keyword override post-processing memastikan akurasi terlepas dari output LLM.
+
 ## Menjalankan Test
 
 ```bash
@@ -306,6 +310,16 @@ php artisan test
 ```
 
 Testing memakai SQLite in-memory dari `phpunit.xml`, jadi tidak mengubah database MySQL local.
+
+## Changelog Seeder
+
+Untuk mengisi data changelog:
+
+```bash
+php artisan db:seed --class=ChangelogSeeder
+```
+
+Perintah ini menambahkan data awal changelog ke database. Bisa dijalankan kapan saja jika ingin memperbarui data changelog.
 
 ## Perintah yang Sering Dipakai Developer
 
@@ -319,6 +333,7 @@ php artisan migrate:fresh --seed
 php artisan serve
 php artisan route:list --path=api
 php artisan test
+php artisan db:seed --class=ChangelogSeeder
 ```
 
 Jika perlu asset frontend bawaan Laravel:
@@ -339,6 +354,7 @@ app/
   Http/Resources/          Format response resource
   Models/                  Model database
   Services/                Logic bisnis dan parser transaksi
+  Services/AiTransactionParserService.php  AI chat parser dengan Groq/Gemini
   Traits/ApiResponse.php   Format response API konsisten
 
 database/
@@ -395,7 +411,7 @@ Cek MySQL sudah menyala dan konfigurasi `.env` benar:
 ```env
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=zaku_api
+DB_DATABASE=dompet_api
 DB_USERNAME=root
 DB_PASSWORD=
 ```
@@ -424,7 +440,7 @@ Authorization: Bearer TOKEN_DARI_LOGIN
 Accept: application/json
 ```
 
-Token harus berasal dari endpoint `/api/auth/login`.
+Token harus berasal dari endpoint `/api/v1/auth/login`.
 
 ### Dokumentasi `/docs` tidak sesuai URL local
 
