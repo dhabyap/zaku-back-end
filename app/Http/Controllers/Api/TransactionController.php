@@ -13,6 +13,7 @@ use App\Services\DateLabelService;
 use App\Services\TransactionParserService;
 use App\Services\TransactionService;
 use App\Http\Requests\UpdateTransactionRequest;
+use Illuminate\Support\Str;
 use App\Traits\ApiResponse;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -361,6 +362,25 @@ class TransactionController extends Controller
                 'response' => null,
                 'provider' => 'local',
             ];
+        }
+
+        // Keyword override: AI sometimes misclassifies, force known keywords
+        $normalized = Str::lower($message);
+        $incomeKw = ['gaji', 'bonus', 'dibayar', 'transfer masuk', 'dapat', 'dapet', 'dpt', 'pendapatan', 'fee'];
+        $expenseKw = ['beli', 'bayar', 'belanja', 'isi', 'sewa', 'tagihan', 'potong', 'hutang', 'untuk'];
+        foreach ($incomeKw as $kw) {
+            if (str_contains($normalized, $kw)) {
+                $parsed['type'] = Transaction::TYPE_INCOME;
+                break;
+            }
+        }
+        if ($parsed['type'] !== Transaction::TYPE_INCOME) {
+            foreach ($expenseKw as $kw) {
+                if (str_contains($normalized, $kw)) {
+                    $parsed['type'] = Transaction::TYPE_EXPENSE;
+                    break;
+                }
+            }
         }
 
         if ($parsed['amount'] === null || $parsed['amount'] <= 0 || $parsed['category'] === null || $parsed['type'] === null) {
