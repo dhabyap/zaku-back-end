@@ -35,9 +35,15 @@ Route::prefix('v1')->group(function () {
         $totalIncome = (int) \App\Models\Transaction::where('type', 'income')->sum('amount');
         $totalExpense = (int) \App\Models\Transaction::where('type', 'expense')->sum('amount');
 
+        // Active users: transacted in last 30 days
+        $activeUsers = \App\Models\Transaction::where('transaction_date', '>=', now()->subDays(30))
+            ->distinct('user_id')
+            ->count('user_id');
+
         return response()->json([
             'data' => [
                 'user_count' => $userCount,
+                'active_users' => $activeUsers,
                 'transaction_count' => $txCount,
                 'total_amount' => $totalAmount,
                 'total_income' => $totalIncome,
