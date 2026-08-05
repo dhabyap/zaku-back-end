@@ -28,6 +28,24 @@ Route::prefix('v1')->group(function () {
         ]);
     });
 
+    Route::get('/stats/public', function () {
+        $userCount = \App\Models\User::count();
+        $txCount = \App\Models\Transaction::count();
+        $totalAmount = (int) \App\Models\Transaction::sum('amount');
+        $totalIncome = (int) \App\Models\Transaction::where('type', 'income')->sum('amount');
+        $totalExpense = (int) \App\Models\Transaction::where('type', 'expense')->sum('amount');
+
+        return response()->json([
+            'data' => [
+                'user_count' => $userCount,
+                'transaction_count' => $txCount,
+                'total_amount' => $totalAmount,
+                'total_income' => $totalIncome,
+                'total_expense' => $totalExpense,
+            ],
+        ]);
+    });
+
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:registration');
         Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
