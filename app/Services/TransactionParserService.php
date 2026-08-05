@@ -49,7 +49,7 @@ class TransactionParserService
 
     private function parseType(string $message): string
     {
-        $incomeKeywords = ['gaji', 'bonus', 'dibayar', 'transfer masuk', 'dapat', 'pendapatan', 'fee'];
+        $incomeKeywords = ['gaji', 'bonus', 'dibayar', 'transfer masuk', 'dapat', 'dapet', 'dpt', 'pendapatan', 'fee'];
 
         foreach ($incomeKeywords as $keyword) {
             if (str_contains($message, $keyword)) {
