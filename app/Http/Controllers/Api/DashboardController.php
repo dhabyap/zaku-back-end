@@ -22,8 +22,18 @@ class DashboardController extends Controller
 
     public function monthlyRecap(Request $request, DashboardService $dashboardService): JsonResponse
     {
+        $month = $request->query('month', null);
+        $year = $request->query('year', null);
+
+        // Default to previous month if no month/year is provided
+        if (empty($month) || empty($year)) {
+            $prevMonth = now()->subMonth();
+            $month = $prevMonth->month;
+            $year = $prevMonth->year;
+        }
+
         return $this->successResponse(
-            $dashboardService->getMonthlyRecap($request->user()),
+            $dashboardService->getMonthlyRecap($request->user(), (int) $month, (int) $year),
             'Rekapan bulanan berhasil diambil',
         );
     }

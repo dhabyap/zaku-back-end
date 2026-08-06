@@ -42,23 +42,33 @@ class DashboardService
         ];
     }
 
-    public function getMonthlyRecap(User $user): array
+    public function getMonthlyRecap(User $user, int $month = null, int $year = null): array
     {
-        $lastMonthStart = now()->subMonth()->startOfMonth();
-        $lastMonthEnd = now()->subMonth()->endOfMonth();
+        $date = Carbon::createFromDate($year, $month, 1);
+        $start = $date->startOfMonth();
+        $end = $date->endOfMonth();
 
         $transactions = $this->completedTransactions($user)
-            ->whereBetween('transaction_date', [$lastMonthStart, $lastMonthEnd])
+            ->whereBetween('transaction_date', [$start, $end])
             ->get();
 
         $totalIncome = (int) $transactions->where('type', Transaction::TYPE_INCOME)->sum('amount');
         $totalExpense = (int) $transactions->where('type', Transaction::TYPE_EXPENSE)->sum('amount');
+        $netCashflow = $totalIncome - $totalExpense;
+
+        $expenseByCategory = $this->getCategoryBreakdown($user, $start, $end, Transaction::TYPE_EXPENSE);
+        $incomeByCategory = $this->getCategoryBreakdown($user, $start, $end, Transaction::TYPE_INCOME);
+
+        $insight = $this->generateRecapInsight($user, $start, $end, $totalIncome, $totalExpense);
 
         return [
-            'month' => $lastMonthStart->format('F Y'),
+            'month_year' => $date->format('F Y'),
             'total_income' => $totalIncome,
             'total_expense' => $totalExpense,
-            'net_cashflow' => $totalIncome - $totalExpense,
+            'net_cashflow' => $netCashflow,
+            'expense_by_category' => $expenseByCategory,
+            'income_by_category' => $incomeByCategory,
+            'insight' => $insight,
         ];
     }
 
@@ -279,5 +289,85 @@ class DashboardService
     private function hasCategoryTable(): bool
     {
         return Schema::hasTable('categories');
+    }
+
+    private function getCategoryBreakdown(User $user, Carbon $start, Carbon $end, string $type): array
+    {
+        if (! $this->hasCategoryTable()) {
+            return [];
+        }
+
+        $transactions = $this->completedTransactions($user)
+            ->where('type', $type)
+            ->whereBetween('transaction_date', [$start, $end])
+            ->with('category')
+            ->get();
+
+        $totalAmount = (int) $transactions->sum('amount');
+        if ($totalAmount <= 0) {
+            return [];
+        }
+
+        return $transactions
+            ->groupBy(fn (Transaction $transaction) => $transaction->category?->name ?? 'LAINNYA')
+            ->map(function ($transactions) use ($totalAmount) {
+                $first = $transactions->first();
+                $amount = (int) $transactions->sum('amount');
+
+                return [
+                    'category_name' => $first->category?->name ?? 'LAINNYA',
+                    'category_icon' => $first->category?->icon ?? '📌',
+                    'amount' => $amount,
+                    'percentage' => (int) round(($amount / $totalAmount) * 100),
+                ];
+            })
+            ->sortByDesc('amount')
+            ->values()
+            ->all();
+    }
+
+    private function generateRecapInsight(User $user, Carbon $start, Carbon $end, int $totalIncome, int $totalExpense): array
+    {
+        $netCashflow = $totalIncome - $totalExpense;
+        $prevMonthStart = (clone $start)->subMonth();
+        $prevMonthEnd = (clone $end)->subMonth();
+
+        $prevMonthTransactions = $this->completedTransactions($user)
+            ->whereBetween('transaction_date', [$prevMonthStart, $prevMonthEnd])
+            ->get();
+        $prevTotalIncome = (int) $prevMonthTransactions->where('type', Transaction::TYPE_INCOME)->sum('amount');
+        $prevTotalExpense = (int) $prevMonthTransactions->where('type', Transaction::TYPE_EXPENSE)->sum('amount');
+        $prevNetCashflow = $prevTotalIncome - $prevTotalExpense;
+
+        $insightText = 'Analisis bulan ini siap!';
+        $insightSubtext = '';
+        $icon = '💡';
+
+        if ($netCashflow > $prevNetCashflow) {
+            $insightText = 'Cashflow bulan ini membaik!';
+            $insightSubtext = 'Dibanding bulan lalu, net cashflow naik Rp '.number_format(abs($netCashflow - $prevNetCashflow), 0, ',', '.');
+            $icon = '📈';
+        } elseif ($netCashflow < $prevNetCashflow) {
+            $insightText = 'Cashflow bulan ini menurun.';
+            $insightSubtext = 'Dibanding bulan lalu, net cashflow turun Rp '.number_format(abs($netCashflow - $prevNetCashflow), 0, ',', '.');
+            $icon = '📉';
+        }
+
+        // Contoh insight lain: top 3 pengeluaran
+        $topExpenses = collect($this->getCategoryBreakdown($user, $start, $end, Transaction::TYPE_EXPENSE))
+            ->take(3)
+            ->map(fn($cat) => $cat['category_name'])
+            ->implode(', ');
+
+        if (!empty($topExpenses)) {
+            $insightSubtext .= ($insightSubtext ? ' · ' : '') . 'Pengeluaran terbesar pada: '.$topExpenses;
+        }
+
+
+        return [
+            'text' => $insightText,
+            'subtext' => $insightSubtext,
+            'icon' => $icon,
+        ];
     }
 }
