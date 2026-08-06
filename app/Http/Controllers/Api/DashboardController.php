@@ -19,4 +19,12 @@ class DashboardController extends Controller
             'Dashboard berhasil diambil',
         );
     }
+
+    public function monthlyRecap(Request $request, DashboardService $dashboardService): JsonResponse
+    {
+        return $this->successResponse(
+            $dashboardService->getMonthlyRecap($request->user()),
+            'Rekapan bulanan berhasil diambil',
+        );
+    }
 }

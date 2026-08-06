@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- ✨ Fitur rekap bulanan: Menampilkan total pengeluaran dan pemasukan bulan sebelumnya.
+
 ### Planned
 - [ ] JWT Authentication System
 - [ ] Wallet Management API

@@ -81,6 +81,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/user/budget', [UserController::class, 'updateBudget']);
 
         Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/dashboard/monthly-recap', [DashboardController::class, 'monthlyRecap']);
 
         Route::get('/transactions', [TransactionController::class, 'index']);
         Route::get('/insights', [\App\Http\Controllers\Api\InsightController::class, 'index']);

@@ -38,6 +38,27 @@ class DashboardService
             'insight_strip' => $this->buildInsight($user),
             'recent_transactions' => $this->recentTransactions($user),
             'expense_by_category' => $expenseByCategory,
+            'monthly_recap' => $this->getMonthlyRecap($user),
+        ];
+    }
+
+    public function getMonthlyRecap(User $user): array
+    {
+        $lastMonthStart = now()->subMonth()->startOfMonth();
+        $lastMonthEnd = now()->subMonth()->endOfMonth();
+
+        $transactions = $this->completedTransactions($user)
+            ->whereBetween('transaction_date', [$lastMonthStart, $lastMonthEnd])
+            ->get();
+
+        $totalIncome = (int) $transactions->where('type', Transaction::TYPE_INCOME)->sum('amount');
+        $totalExpense = (int) $transactions->where('type', Transaction::TYPE_EXPENSE)->sum('amount');
+
+        return [
+            'month' => $lastMonthStart->format('F Y'),
+            'total_income' => $totalIncome,
+            'total_expense' => $totalExpense,
+            'net_cashflow' => $totalIncome - $totalExpense,
         ];
     }
 
