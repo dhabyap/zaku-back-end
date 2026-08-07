@@ -47,6 +47,7 @@ class DashboardService
         $date = Carbon::createFromDate($year, $month, 1);
         $start = $date->startOfMonth();
         $end = $date->endOfMonth();
+        $daysInMonth = $date->daysInMonth;
 
         $transactions = $this->completedTransactions($user)
             ->whereBetween('transaction_date', [$start, $end])
@@ -56,20 +57,212 @@ class DashboardService
         $totalExpense = (int) $transactions->where('type', Transaction::TYPE_EXPENSE)->sum('amount');
         $netCashflow = $totalIncome - $totalExpense;
 
+        // Previous month data for comparison
+        $prevStart = (clone $start)->subMonth();
+        $prevEnd = (clone $end)->subMonth();
+        $prevMonthLabel = $prevStart->format('M Y');
+        $prevTransactions = $this->completedTransactions($user)
+            ->whereBetween('transaction_date', [$prevStart, $prevEnd])
+            ->get();
+        $prevTotalIncome = (int) $prevTransactions->where('type', Transaction::TYPE_INCOME)->sum('amount');
+        $prevTotalExpense = (int) $prevTransactions->where('type', Transaction::TYPE_EXPENSE)->sum('amount');
+        $prevNetCashflow = $prevTotalIncome - $prevTotalExpense;
+
+        // Summary deltas
+        $incomeDelta = $prevTotalIncome > 0 ? (int) round((($totalIncome - $prevTotalIncome) / $prevTotalIncome) * 100) : 0;
+        $expenseDelta = $prevTotalExpense > 0 ? (int) round((($totalExpense - $prevTotalExpense) / $prevTotalExpense) * 100) : 0;
+        $savingsDelta = $prevNetCashflow !== 0 ? (int) round((($netCashflow - $prevNetCashflow) / abs($prevNetCashflow)) * 100) : 0;
+
+        // Weekly expense breakdown (4 weeks)
+        $weekExpenses = [];
+        for ($w = 1; $w <= 4; $w++) {
+            $weekStart = (clone $start)->addWeeks($w - 1);
+            $weekEnd = $weekStart->copy()->endOfWeek();
+            if ($weekStart->month !== $date->month) {
+                $weekStart = $start->copy();
+            }
+            if ($weekEnd->month !== $date->month) {
+                $weekEnd = $end->copy();
+            }
+            $weekAmount = (int) $this->completedTransactions($user)
+                ->where('type', Transaction::TYPE_EXPENSE)
+                ->whereBetween('transaction_date', [$weekStart, $weekEnd])
+                ->sum('amount');
+            $weekExpenses[] = ['week' => $w, 'label' => "M{$w}", 'amount' => $weekAmount];
+        }
+        $maxWeek = collect($weekExpenses)->max('amount');
+
+        // Top 5 expense transactions
+        $topExpenses = $transactions->where('type', Transaction::TYPE_EXPENSE)
+            ->sortByDesc('amount')
+            ->take(5)
+            ->values()
+            ->map(fn(Transaction $t) => [
+                'id' => $t->id,
+                'description' => $t->description ?: 'Tanpa deskripsi',
+                'amount' => (int) $t->amount,
+                'category_name' => $t->category?->name ?? 'LAINNYA',
+                'category_icon' => $t->category?->icon ?? '📌',
+                'date' => $t->transaction_date?->format('d M') ?? '',
+            ])
+            ->all();
+
+        // Category breakdown
         $expenseByCategory = $this->getCategoryBreakdown($user, $start, $end, Transaction::TYPE_EXPENSE);
         $incomeByCategory = $this->getCategoryBreakdown($user, $start, $end, Transaction::TYPE_INCOME);
 
-        $insight = $this->generateRecapInsight($user, $start, $end, $totalIncome, $totalExpense);
+        // Category comparison vs previous month
+        $comparison = [];
+        if ($this->hasCategoryTable() && $totalExpense > 0) {
+            $prevCategoryBreakdown = $this->getCategoryBreakdown($user, $prevStart, $prevEnd, Transaction::TYPE_EXPENSE);
+            $prevCatMap = collect($prevCategoryBreakdown)->keyBy('category_name');
+
+            foreach ($expenseByCategory as $cat) {
+                $prevCat = $prevCatMap->get($cat['category_name']);
+                $prevAmount = $prevCat ? $prevCat['amount'] : 0;
+                $delta = $prevAmount > 0 ? (int) round((($cat['amount'] - $prevAmount) / $prevAmount) * 100) : ($cat['amount'] > 0 ? 100 : 0);
+
+                $comparison[] = [
+                    'category_name' => $cat['category_name'],
+                    'category_icon' => $cat['category_icon'],
+                    'current_amount' => $cat['amount'],
+                    'prev_amount' => $prevAmount,
+                    'delta' => $delta,
+                ];
+            }
+        }
+
+        // AI Insights (algorithmic, not LLM)
+        $aiInsights = $this->generateRecapInsights($user, $start, $end, $totalIncome, $totalExpense, $expenseByCategory, $weekExpenses);
+        $financialScore = $this->calculateFinancialScore($savingsRate = $totalIncome > 0 ? (int) round(($netCashflow / $totalIncome) * 100) : 0, $expenseDelta, $totalIncome, $totalExpense);
 
         return [
             'month_year' => $date->format('F Y'),
+            'month_label' => $date->format('M'),
+            'prev_month_label' => $prevMonthLabel,
             'total_income' => $totalIncome,
             'total_expense' => $totalExpense,
             'net_cashflow' => $netCashflow,
+            'savings_rate' => $savingsRate,
+            'days_in_month' => $daysInMonth,
+            'summary_delta' => [
+                'income' => $incomeDelta,
+                'expense' => $expenseDelta,
+                'savings' => $savingsDelta,
+            ],
+            'week_expenses' => $weekExpenses,
+            'week_max' => $maxWeek,
+            'top_expenses' => $topExpenses,
             'expense_by_category' => $expenseByCategory,
             'income_by_category' => $incomeByCategory,
-            'insight' => $insight,
+            'comparison' => $comparison,
+            'ai_insights' => $aiInsights,
+            'financial_score' => $financialScore,
         ];
+    }
+
+    private function generateRecapInsights(User $user, Carbon $start, Carbon $end, int $totalIncome, int $totalExpense, array $expenseByCategory, array $weekExpenses): array
+    {
+        $insights = [];
+        $prevStart = (clone $start)->subMonth();
+        $prevEnd = (clone $end)->subMonth();
+
+        // 1. Top category insight
+        if (!empty($expenseByCategory)) {
+            $top = $expenseByCategory[0];
+            if ($top['percentage'] >= 25) {
+                $prevCatAmount = (int) $this->completedTransactions($user)
+                    ->where('type', Transaction::TYPE_EXPENSE)
+                    ->whereBetween('transaction_date', [$prevStart, $prevEnd])
+                    ->whereHas('category', fn($q) => $q->where('name', $top['category_name']))
+                    ->sum('amount');
+
+                $catDelta = $prevCatAmount > 0 ? (int) round((($top['amount'] - $prevCatAmount) / $prevCatAmount) * 100) : 0;
+
+                if ($catDelta > 10) {
+                    $insights[] = [
+                        'icon' => '⚠️',
+                        'title' => "{$top['category_name']} melebihi batas wajar",
+                        'description' => "Pengeluaran {$top['category_name']} bulan ini Rp " . number_format($top['amount'], 0, ',', '.') . " — naik {$catDelta}% dari bulan lalu.",
+                        'type' => 'warn',
+                    ];
+                } elseif ($catDelta < -10) {
+                    $insights[] = [
+                        'icon' => '✅',
+                        'title' => "{$top['category_name']} berhasil ditekan",
+                        'description' => "Turun " . abs($catDelta) . "% dari bulan lalu. Pertahankan!",
+                        'type' => 'good',
+                    ];
+                }
+            }
+        }
+
+        // 2. Savings rate insight
+        $savingsRate = $totalIncome > 0 ? (int) round((($totalIncome - $totalExpense) / $totalIncome) * 100) : 0;
+        if ($savingsRate >= 30) {
+            $insights[] = [
+                'icon' => '✅',
+                'title' => "Saving rate {$savingsRate}% — di atas rata-rata",
+                'description' => "Rata-rata saving rate Indonesia sekitar 18–22%. Kamu jauh di atasnya.",
+                'type' => 'good',
+            ];
+        } elseif ($savingsRate < 0 && $totalIncome > 0) {
+            $insights[] = [
+                'icon' => '⚠️',
+                'title' => "Defisit bulan ini!",
+                'description' => "Pengeluaran melebihi pemasukan sebesar Rp " . number_format(abs($totalIncome - $totalExpense), 0, ',', '.') . ".",
+                'type' => 'warn',
+            ];
+        }
+
+        // 3. Week pattern
+        $maxWeekIdx = 0;
+        $maxWeekVal = 0;
+        foreach ($weekExpenses as $i => $w) {
+            if ($w['amount'] > $maxWeekVal) {
+                $maxWeekVal = $w['amount'];
+                $maxWeekIdx = $i;
+            }
+        }
+        if ($maxWeekIdx >= 2 && $maxWeekVal > 0) {
+            $insights[] = [
+                'icon' => '📅',
+                'title' => "Pola pengeluaran minggu ke-" . ($maxWeekIdx + 1) . " tinggi",
+                'description' => "Minggu ke-" . ($maxWeekIdx + 1) . " jadi puncak pengeluaran. Siapkan budget lebih ketat di periode itu.",
+                'type' => 'warn',
+            ];
+        }
+
+        // 4. General
+        if (empty($insights)) {
+            $insights[] = [
+                'icon' => '💡',
+                'title' => 'Pengeluaran bulan ini stabil',
+                'description' => 'Tidak ada pola mencolok. Tetap pantau transaksi harian.',
+                'type' => 'info',
+            ];
+        }
+
+        return $insights;
+    }
+
+    private function calculateFinancialScore(int $savingsRate, int $expenseDelta, int $totalIncome, int $totalExpense): int
+    {
+        $score = 50; // baseline
+
+        // Savings rate contribution (up to +30)
+        if ($savingsRate >= 50) $score += 30;
+        elseif ($savingsRate >= 30) $score += 20;
+        elseif ($savingsRate >= 10) $score += 10;
+        elseif ($savingsRate < 0) $score -= 20;
+
+        // Expense control (up to +20)
+        if ($expenseDelta < -10) $score += 20;
+        elseif ($expenseDelta < 0) $score += 10;
+        elseif ($expenseDelta > 20) $score -= 15;
+        elseif ($expenseDelta > 10) $score -= 5;
+
+        return max(0, min(100, $score));
     }
 
     private function completedTransactions(User $user): Builder
@@ -324,50 +517,5 @@ class DashboardService
             ->sortByDesc('amount')
             ->values()
             ->all();
-    }
-
-    private function generateRecapInsight(User $user, Carbon $start, Carbon $end, int $totalIncome, int $totalExpense): array
-    {
-        $netCashflow = $totalIncome - $totalExpense;
-        $prevMonthStart = (clone $start)->subMonth();
-        $prevMonthEnd = (clone $end)->subMonth();
-
-        $prevMonthTransactions = $this->completedTransactions($user)
-            ->whereBetween('transaction_date', [$prevMonthStart, $prevMonthEnd])
-            ->get();
-        $prevTotalIncome = (int) $prevMonthTransactions->where('type', Transaction::TYPE_INCOME)->sum('amount');
-        $prevTotalExpense = (int) $prevMonthTransactions->where('type', Transaction::TYPE_EXPENSE)->sum('amount');
-        $prevNetCashflow = $prevTotalIncome - $prevTotalExpense;
-
-        $insightText = 'Analisis bulan ini siap!';
-        $insightSubtext = '';
-        $icon = '💡';
-
-        if ($netCashflow > $prevNetCashflow) {
-            $insightText = 'Cashflow bulan ini membaik!';
-            $insightSubtext = 'Dibanding bulan lalu, net cashflow naik Rp '.number_format(abs($netCashflow - $prevNetCashflow), 0, ',', '.');
-            $icon = '📈';
-        } elseif ($netCashflow < $prevNetCashflow) {
-            $insightText = 'Cashflow bulan ini menurun.';
-            $insightSubtext = 'Dibanding bulan lalu, net cashflow turun Rp '.number_format(abs($netCashflow - $prevNetCashflow), 0, ',', '.');
-            $icon = '📉';
-        }
-
-        // Contoh insight lain: top 3 pengeluaran
-        $topExpenses = collect($this->getCategoryBreakdown($user, $start, $end, Transaction::TYPE_EXPENSE))
-            ->take(3)
-            ->map(fn($cat) => $cat['category_name'])
-            ->implode(', ');
-
-        if (!empty($topExpenses)) {
-            $insightSubtext .= ($insightSubtext ? ' · ' : '') . 'Pengeluaran terbesar pada: '.$topExpenses;
-        }
-
-
-        return [
-            'text' => $insightText,
-            'subtext' => $insightSubtext,
-            'icon' => $icon,
-        ];
     }
 }
