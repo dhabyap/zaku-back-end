@@ -433,7 +433,6 @@ class TransactionController extends Controller
     private function baseQuery(Request $request): Builder
     {
         return Transaction::query()
-            ->whereHas('wallet', fn (Builder $query) => $query->where('user_id', $request->user()->id))
-            ->where('status', Transaction::STATUS_COMPLETED);
+            ->whereHas('wallet', fn (Builder $query) => $query->where('user_id', $request->user()->id));
     }
 }

@@ -268,11 +268,7 @@ class DashboardService
     private function completedTransactions(User $user): Builder
     {
         return Transaction::query()
-            ->whereHas('wallet', fn (Builder $query) => $query->where('user_id', $user->id))
-            ->where(function (Builder $query) {
-                $query->where('status', Transaction::STATUS_COMPLETED)
-                    ->orWhereNull('status');
-            });
+            ->whereHas('wallet', fn (Builder $query) => $query->where('user_id', $user->id));
     }
 
     private function recentTransactions(User $user): array
