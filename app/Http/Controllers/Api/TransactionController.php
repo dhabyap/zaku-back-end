@@ -52,7 +52,7 @@ class TransactionController extends Controller
             'amount' => (int) $transaction->amount,
             'type' => $transaction->type,
             'category_name' => $transaction->category?->name ?? 'LAINNYA',
-            'category_icon' => $transaction->category?->icon ?? 'ðŸ“Œ',
+            'category_icon' => $transaction->category?->icon ?? 'LAINNYA', // Changed to LAINNYA
             'date_formatted' => DateLabelService::date($transaction->transaction_date),
             'source' => $transaction->source,
         ], 'Transaksi berhasil dicatat', 201);
@@ -169,7 +169,7 @@ class TransactionController extends Controller
 
                 return [
                     'name' => $name,
-                    'icon' => $transactions->first()->category?->icon ?? '📌',
+                    'icon' => $transactions->first()->category?->icon ?? 'LAINNYA', // Changed to LAINNYA
                     'amount' => $amount,
                     'transaction_count' => $count,
                     'percentage' => (int) round(($amount / $totalExpense) * 100),
@@ -213,6 +213,8 @@ class TransactionController extends Controller
         }
 
         $total = (clone $query)->count();
+        $totalIncome = (clone $query)->where('type', Transaction::TYPE_INCOME)->sum('amount');
+        $totalExpense = (clone $query)->where('type', Transaction::TYPE_EXPENSE)->sum('amount');
 
         // Sorting
         $sortBy = $request->query('sort_by', 'transaction_date');
@@ -241,7 +243,7 @@ class TransactionController extends Controller
                     'amount' => (int) $transaction->amount,
                     'type' => $transaction->type,
                     'category_name' => $transaction->category?->name ?? 'LAINNYA',
-                    'category_icon' => $transaction->category?->icon ?? '📌',
+                    'category_icon' => $transaction->category?->icon ?? 'LAINNYA', // Changed to LAINNYA
                     'date_formatted' => DateLabelService::date($transaction->transaction_date),
                     'source' => $transaction->source ?? Transaction::SOURCE_MANUAL,
                 ])->values()->all(),
@@ -253,6 +255,8 @@ class TransactionController extends Controller
             'groups' => $groups,
             'meta' => [
                 'total' => $total,
+                'total_income' => (int) $totalIncome,
+                'total_expense' => (int) $totalExpense,
                 'page' => $page,
                 'limit' => $limit,
                 'has_more' => ($page * $limit) < $total,
@@ -290,7 +294,7 @@ class TransactionController extends Controller
                 'description' => $transaction->description,
                 'amount' => (int) $transaction->amount,
                 'category' => $transaction->category?->name ?? 'LAINNYA',
-                'category_icon' => $transaction->category?->icon ?? '📌',
+                'category_icon' => $transaction->category?->icon ?? 'LAINNYA', // Changed to LAINNYA
                 'type' => $transaction->type,
             ],
         ], 'Transaksi berhasil dicatat', 201);
@@ -337,7 +341,7 @@ class TransactionController extends Controller
             'amount' => (int) $updated->amount,
             'type' => $updated->type,
             'category_name' => $updated->category?->name ?? 'LAINNYA',
-            'category_icon' => $updated->category?->icon ?? 'ðŸ“Œ',
+            'category_icon' => $updated->category?->icon ?? 'LAINNYA', // Changed to LAINNYA
             'date_formatted' => DateLabelService::date($updated->transaction_date),
             'source' => $updated->source,
         ], 'Transaksi berhasil diperbarui');
@@ -409,7 +413,7 @@ class TransactionController extends Controller
             'description' => $transaction->description,
             'amount' => (int) $transaction->amount,
             'amount_formatted' => $this->formatAmount((int) $transaction->amount, $transaction->type),
-            'category' => trim(($transaction->category?->icon ?? 'ðŸ“Œ').' '.($transaction->category?->name ?? 'LAINNYA')),
+            'category' => trim(($transaction->category?->icon ?? 'LAINNYA').' '.($transaction->category?->name ?? 'LAINNYA')), // Changed to LAINNYA
             'type' => $transaction->type,
         ], 'Transaksi berhasil dicatat');
     }
