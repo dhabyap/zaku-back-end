@@ -45,8 +45,8 @@ class DashboardService
     public function getMonthlyRecap(User $user, int $month = null, int $year = null): array
     {
         $date = Carbon::createFromDate($year, $month, 1);
-        $start = $date->startOfMonth();
-        $end = $date->endOfMonth();
+        $start = $date->copy()->startOfMonth();
+        $end = $date->copy()->endOfMonth();
         $daysInMonth = $date->daysInMonth;
 
         $transactions = $this->completedTransactions($user)
