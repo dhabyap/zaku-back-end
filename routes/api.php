@@ -103,6 +103,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']);
 
         Route::get('/changelogs', [\App\Http\Controllers\Api\ChangelogController::class, 'index']);
+        Route::post('/changelogs', [\App\Http\Controllers\Api\ChangelogController::class, 'store']);
     });
 
 });

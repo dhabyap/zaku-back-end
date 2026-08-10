@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Changelog;
+use App\Http\Requests\StoreChangelogRequest;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,5 +30,21 @@ class ChangelogController extends Controller
             ]);
 
         return $this->successResponse($changelogs, 'Daftar changelog berhasil diambil');
+    }
+
+    public function store(StoreChangelogRequest $request): JsonResponse
+    {
+        $changelog = Changelog::create($request->validated());
+
+        return $this->successResponse([
+            'id' => $changelog->id,
+            'title' => $changelog->title,
+            'description' => $changelog->description,
+            'author' => $changelog->author ?? 'Zaku Team',
+            'version' => $changelog->version,
+            'status' => $changelog->status,
+            'issues' => $changelog->issues,
+            'created_at' => $changelog->created_at?->toISOString(),
+        ], 'Changelog berhasil ditambahkan', 201);
     }
 }
