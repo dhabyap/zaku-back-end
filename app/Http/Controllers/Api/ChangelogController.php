@@ -13,12 +13,16 @@ class ChangelogController extends Controller
 {
     use ApiResponse;
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $perPage = min((int) $request->query('per_page', 10), 50);
+
         $changelogs = Changelog::query()
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(fn (Changelog $log) => [
+            ->paginate($perPage);
+
+        return $this->successResponse([
+            'items' => $changelogs->map(fn (Changelog $log) => [
                 'id' => $log->id,
                 'title' => $log->title,
                 'description' => $log->description,
@@ -27,9 +31,14 @@ class ChangelogController extends Controller
                 'status' => $log->status,
                 'issues' => $log->issues,
                 'created_at' => $log->created_at?->toISOString(),
-            ]);
-
-        return $this->successResponse($changelogs, 'Daftar changelog berhasil diambil');
+            ]),
+            'pagination' => [
+                'current_page' => $changelogs->currentPage(),
+                'last_page' => $changelogs->lastPage(),
+                'per_page' => $changelogs->perPage(),
+                'total' => $changelogs->total(),
+            ],
+        ], 'Daftar changelog berhasil diambil');
     }
 
     public function store(StoreChangelogRequest $request): JsonResponse
