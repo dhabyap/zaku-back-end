@@ -73,22 +73,26 @@ class DashboardService
         $expenseDelta = $prevTotalExpense > 0 ? (int) round((($totalExpense - $prevTotalExpense) / $prevTotalExpense) * 100) : 0;
         $savingsDelta = $prevNetCashflow !== 0 ? (int) round((($netCashflow - $prevNetCashflow) / abs($prevNetCashflow)) * 100) : 0;
 
-        // Weekly expense breakdown (4 weeks)
+        // Weekly expense breakdown (dynamic — 4 to 6 weeks depending on month)
+        $numWeeks = (int) ceil($daysInMonth / 7);
         $weekExpenses = [];
-        for ($w = 1; $w <= 4; $w++) {
-            $weekStart = (clone $start)->addWeeks($w - 1);
-            $weekEnd = $weekStart->copy()->endOfWeek();
-            if ($weekStart->month !== $date->month) {
-                $weekStart = $start->copy();
-            }
-            if ($weekEnd->month !== $date->month) {
+        for ($w = 1; $w <= $numWeeks; $w++) {
+            $weekStart = $start->copy()->addDays(($w - 1) * 7);
+            $weekEnd = $weekStart->copy()->addDays(6);
+            if ($weekEnd->greaterThan($end)) {
                 $weekEnd = $end->copy();
             }
             $weekAmount = (int) $this->completedTransactions($user)
                 ->where('type', Transaction::TYPE_EXPENSE)
                 ->whereBetween('transaction_date', [$weekStart, $weekEnd])
                 ->sum('amount');
-            $weekExpenses[] = ['week' => $w, 'label' => "M{$w}", 'amount' => $weekAmount];
+            $weekExpenses[] = [
+                'week' => $w,
+                'label' => 'M' . $w,
+                'amount' => $weekAmount,
+                'start' => $weekStart->format('d M'),
+                'end' => $weekEnd->format('d M'),
+            ];
         }
         $maxWeek = collect($weekExpenses)->max('amount');
 
@@ -166,84 +170,187 @@ class DashboardService
         $insights = [];
         $prevStart = (clone $start)->subMonth();
         $prevEnd = (clone $end)->subMonth();
+        $savingsRate = $totalIncome > 0 ? (int) round((($totalIncome - $totalExpense) / $totalIncome) * 100) : 0;
+        $netCashflow = $totalIncome - $totalExpense;
 
-        // 1. Top category insight
+        // 1. Defisit / surplus — always show
+        if ($totalIncome > 0 && $netCashflow < 0) {
+            $deficitPct = (int) round((abs($netCashflow) / $totalIncome) * 100);
+            $insights[] = [
+                'icon' => '🚨',
+                'title' => 'Defisit bulan ini!',
+                'description' => 'Pengeluaran melebihi pemasukan sebesar Rp ' . number_format(abs($netCashflow), 0, ',', '.') . " ({$deficitPct}% dari pemasukan).",
+                'type' => 'warn',
+            ];
+        } elseif ($savingsRate >= 30) {
+            $insights[] = [
+                'icon' => '🎉',
+                'title' => "Saving rate {$savingsRate}% — excellent!",
+                'description' => "Kamu simpan Rp " . number_format($netCashflow, 0, ',', '.') . " bulan ini. Rata-rata nasional cuma 18–22%.",
+                'type' => 'good',
+            ];
+        } elseif ($savingsRate >= 10) {
+            $insights[] = [
+                'icon' => '💪',
+                'title' => "Saving rate {$savingsRate}% — lumayan!",
+                'description' => 'Masih ada ruang naik. Target 30% untuk keamanan finansial lebih baik.',
+                'type' => 'info',
+            ];
+        }
+
+        // 2. Daily spending velocity
+        $daysElapsed = (int) $start->diffInDays(Carbon::now()->min($end));
+        if ($daysElapsed > 0 && $totalIncome > 0) {
+            $dailyAvg = (int) round($totalExpense / $daysElapsed);
+            $monthlyProjection = $dailyAvg * $start->daysInMonth;
+            if ($monthlyProjection > $totalIncome * 1.1 && $daysElapsed >= 5) {
+                $insights[] = [
+                    'icon' => '📉',
+                    'title' => 'Proyeksi: pengeluaran akan tembus batas',
+                    'description' => "Rata-rata harian Rp " . number_format($dailyAvg, 0, ',', '.') . ". Kalau terus, bulan ini habis Rp " . number_format($monthlyProjection, 0, ',', '.') . ".",
+                    'type' => 'warn',
+                ];
+            } elseif ($monthlyProjection < $totalIncome * 0.7 && $daysElapsed >= 5) {
+                $insights[] = [
+                    'icon' => '✅',
+                    'title' => 'Proyeksi: aman sampai akhir bulan',
+                    'description' => "Rata-rata harian Rp " . number_format($dailyAvg, 0, ',', '.') . ". Proyeksi akhir bulan cuma " . (int) round(($monthlyProjection / max($totalIncome, 1)) * 100) . "% dari pemasukan.",
+                    'type' => 'good',
+                ];
+            }
+        }
+
+        // 3. Top category dominance
         if (!empty($expenseByCategory)) {
             $top = $expenseByCategory[0];
-            if ($top['percentage'] >= 25) {
+            if ($top['percentage'] >= 40) {
+                $insights[] = [
+                    'icon' => '📊',
+                    'title' => "{$top['category_name']} dominasi pengeluaran",
+                    'description' => "{$top['category_name']} makan " . $top['percentage'] . "% total pengeluaran (Rp " . number_format($top['amount'], 0, ',', '.') . "). Coba diversifikasi.",
+                    'type' => 'warn',
+                ];
+            } elseif ($top['percentage'] >= 25) {
+                // Check vs previous month
                 $prevCatAmount = (int) $this->completedTransactions($user)
                     ->where('type', Transaction::TYPE_EXPENSE)
                     ->whereBetween('transaction_date', [$prevStart, $prevEnd])
                     ->whereHas('category', fn($q) => $q->where('name', $top['category_name']))
                     ->sum('amount');
 
-                $catDelta = $prevCatAmount > 0 ? (int) round((($top['amount'] - $prevCatAmount) / $prevCatAmount) * 100) : 0;
-
-                if ($catDelta > 10) {
-                    $insights[] = [
-                        'icon' => '⚠️',
-                        'title' => "{$top['category_name']} melebihi batas wajar",
-                        'description' => "Pengeluaran {$top['category_name']} bulan ini Rp " . number_format($top['amount'], 0, ',', '.') . " — naik {$catDelta}% dari bulan lalu.",
-                        'type' => 'warn',
-                    ];
-                } elseif ($catDelta < -10) {
-                    $insights[] = [
-                        'icon' => '✅',
-                        'title' => "{$top['category_name']} berhasil ditekan",
-                        'description' => "Turun " . abs($catDelta) . "% dari bulan lalu. Pertahankan!",
-                        'type' => 'good',
-                    ];
+                if ($prevCatAmount > 0) {
+                    $catDelta = (int) round((($top['amount'] - $prevCatAmount) / $prevCatAmount) * 100);
+                    if ($catDelta > 15) {
+                        $insights[] = [
+                            'icon' => '⚠️',
+                            'title' => "{$top['category_name']} naik {$catDelta}%",
+                            'description' => 'Bulan ini Rp ' . number_format($top['amount'], 0, ',', '.') . ' vs Rp ' . number_format($prevCatAmount, 0, ',', '.') . ' bulan lalu.',
+                            'type' => 'warn',
+                        ];
+                    } elseif ($catDelta < -15) {
+                        $insights[] = [
+                            'icon' => '✅',
+                            'title' => "{$top['category_name']} turun " . abs($catDelta) . '%',
+                            'description' => 'Dari Rp ' . number_format($prevCatAmount, 0, ',', '.') . ' ke Rp ' . number_format($top['amount'], 0, ',', '.') . '. Pertahankan!',
+                            'type' => 'good',
+                        ];
+                    }
                 }
             }
         }
 
-        // 2. Savings rate insight
-        $savingsRate = $totalIncome > 0 ? (int) round((($totalIncome - $totalExpense) / $totalIncome) * 100) : 0;
-        if ($savingsRate >= 30) {
-            $insights[] = [
-                'icon' => '✅',
-                'title' => "Saving rate {$savingsRate}% — di atas rata-rata",
-                'description' => "Rata-rata saving rate Indonesia sekitar 18–22%. Kamu jauh di atasnya.",
-                'type' => 'good',
-            ];
-        } elseif ($savingsRate < 0 && $totalIncome > 0) {
-            $insights[] = [
-                'icon' => '⚠️',
-                'title' => "Defisit bulan ini!",
-                'description' => "Pengeluaran melebihi pemasukan sebesar Rp " . number_format(abs($totalIncome - $totalExpense), 0, ',', '.') . ".",
-                'type' => 'warn',
-            ];
-        }
-
-        // 3. Week pattern
-        $maxWeekIdx = 0;
-        $maxWeekVal = 0;
-        foreach ($weekExpenses as $i => $w) {
-            if ($w['amount'] > $maxWeekVal) {
-                $maxWeekVal = $w['amount'];
-                $maxWeekIdx = $i;
+        // 4. Week-over-week spike detection
+        if (count($weekExpenses) >= 2) {
+            $amounts = array_column($weekExpenses, 'amount');
+            $avgWeek = (int) round(array_sum($amounts) / count($amounts));
+            if ($avgWeek > 0) {
+                foreach ($weekExpenses as $w) {
+                    if ($w['amount'] > $avgWeek * 1.5 && $w['amount'] > 0) {
+                        $spikePct = (int) round(($w['amount'] / max($avgWeek, 1) - 1) * 100);
+                        $insights[] = [
+                            'icon' => '📅',
+                            'title' => "{$w['label']} pengeluaran spike +{$spikePct}%",
+                            'description' => "Minggu {$w['label']} (" . $w['start'] . '–' . $w['end'] . ") habis Rp " . number_format($w['amount'], 0, ',', '.') . ' — jauh di atas rata-rata.',
+                            'type' => 'warn',
+                        ];
+                        break;
+                    }
+                }
             }
         }
-        if ($maxWeekIdx >= 2 && $maxWeekVal > 0) {
-            $insights[] = [
-                'icon' => '📅',
-                'title' => "Pola pengeluaran minggu ke-" . ($maxWeekIdx + 1) . " tinggi",
-                'description' => "Minggu ke-" . ($maxWeekIdx + 1) . " jadi puncak pengeluaran. Siapkan budget lebih ketat di periode itu.",
-                'type' => 'warn',
-            ];
+
+        // 5. Previous month comparison
+        $prevTotalExpense = (int) $this->completedTransactions($user)
+            ->where('type', Transaction::TYPE_EXPENSE)
+            ->whereBetween('transaction_date', [$prevStart, $prevEnd])
+            ->sum('amount');
+        if ($prevTotalExpense > 0 && $totalExpense > 0) {
+            $expDelta = (int) round((($totalExpense - $prevTotalExpense) / $prevTotalExpense) * 100);
+            if ($expDelta > 20) {
+                $insights[] = [
+                    'icon' => '📈',
+                    'title' => "Pengeluaran naik {$expDelta}% vs bulan lalu",
+                    'description' => 'Rp ' . number_format($prevTotalExpense, 0, ',', '.') . ' → Rp ' . number_format($totalExpense, 0, ',', '.') . '. Cek pengeluaran mana yang naik.',
+                    'type' => 'warn',
+                ];
+            } elseif ($expDelta < -15) {
+                $insights[] = [
+                    'icon' => '📉',
+                    'title' => "Pengeluaran turun " . abs($expDelta) . '% vs bulan lalu',
+                    'description' => 'Dari Rp ' . number_format($prevTotalExpense, 0, ',', '.') . ' ke Rp ' . number_format($totalExpense, 0, ',', '.') . '. Bagus!',
+                    'type' => 'good',
+                ];
+            }
         }
 
-        // 4. General
+        // 6. Income insight
+        $prevTotalIncome = (int) $this->completedTransactions($user)
+            ->where('type', Transaction::TYPE_INCOME)
+            ->whereBetween('transaction_date', [$prevStart, $prevEnd])
+            ->sum('amount');
+        if ($prevTotalIncome > 0 && $totalIncome > 0) {
+            $incDelta = (int) round((($totalIncome - $prevTotalIncome) / $prevTotalIncome) * 100);
+            if ($incDelta < -20) {
+                $insights[] = [
+                    'icon' => '💰',
+                    'title' => "Pemasukan turun {$incDelta}%",
+                    'description' => 'Dari Rp ' . number_format($prevTotalIncome, 0, ',', '.') . ' ke Rp ' . number_format($totalIncome, 0, ',', '.') . '. Cek sumber penghasilan.',
+                    'type' => 'warn',
+                ];
+            } elseif ($incDelta > 20) {
+                $insights[] = [
+                    'icon' => '💰',
+                    'title' => "Pemasukan naik +{$incDelta}%",
+                    'description' => 'Dari Rp ' . number_format($prevTotalIncome, 0, ',', '.') . ' ke Rp ' . number_format($totalIncome, 0, ',', '.') . '. Great job!',
+                    'type' => 'good',
+                ];
+            }
+        }
+
+        // 7. Expense concentration — many small categories = good diversification
+        if (count($expenseByCategory) >= 4 && !empty($expenseByCategory)) {
+            $topPct = $expenseByCategory[0]['percentage'] ?? 0;
+            if ($topPct < 30) {
+                $insights[] = [
+                    'icon' => '✅',
+                    'title' => 'Pengeluaran tersebar merata',
+                    'description' => 'Tidak ada kategori yang terlalu mendominasi. Pola belanja sehat.',
+                    'type' => 'good',
+                ];
+            }
+        }
+
+        // 8. Fallback — always at least 1 insight
         if (empty($insights)) {
             $insights[] = [
                 'icon' => '💡',
                 'title' => 'Pengeluaran bulan ini stabil',
-                'description' => 'Tidak ada pola mencolok. Tetap pantau transaksi harian.',
+                'description' => 'Tidak ada pola mencolok. Pertahankan pola belanja saat ini.',
                 'type' => 'info',
             ];
         }
 
-        return $insights;
+        return array_slice($insights, 0, 5); // max 5 insights
     }
 
     private function calculateFinancialScore(int $savingsRate, int $expenseDelta, int $totalIncome, int $totalExpense): int
@@ -320,7 +427,7 @@ class DashboardService
                     'category_name' => $first->category?->name ?? 'LAINNYA',
                     'category_icon' => $first->category?->icon ?? '📌',
                     'amount' => $amount,
-                    'percentage_of_expense' => (int) round(($amount / $totalExpense) * 100),
+                    'percentage' => (int) round(($amount / $totalExpense) * 100),
                 ];
             })
             ->sortByDesc('amount')
@@ -366,7 +473,7 @@ class DashboardService
             'name' => $category['category_name'],
             'icon' => $category['category_icon'],
             'amount' => $category['amount'],
-            'percentage' => $category['percentage_of_expense'],
+            'percentage' => $category['percentage'],
         ];
     }
 
