@@ -3,6 +3,9 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Exceptions\ThrottleRequestsException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -18,13 +21,27 @@ class Handler extends ExceptionHandler
         'password_confirmation',
     ];
 
-    /**
-     * Register the exception handling callbacks for the application.
-     */
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function render(Request $request, Throwable $e): JsonResponse
+    {
+        if ($e instanceof ThrottleRequestsException) {
+            $retryAfter = $e->getRetryAfter();
+            $seconds = is_int($retryAfter) ? $retryAfter : (int) $retryAfter;
+
+            return response()->json([
+                'success' => false,
+                'status' => 'error',
+                'message' => "Terlalu banyak permintaan. Silakan tunggu {$seconds} detik lagi.",
+                'retry_after' => $seconds,
+            ], 429);
+        }
+
+        return parent::render($request, $e);
     }
 }
