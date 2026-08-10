@@ -243,7 +243,8 @@ class TransactionController extends Controller
                     'amount' => (int) $transaction->amount,
                     'type' => $transaction->type,
                     'category_name' => $transaction->category?->name ?? 'LAINNYA',
-                    'category_icon' => $transaction->category?->icon ?? 'LAINNYA', // Changed to LAINNYA
+                    'category_icon' => $transaction->category?->icon ?? 'LAINNYA',
+                    'transaction_date' => $transaction->transaction_date?->toISOString(), // Tambahkan ini
                     'date_formatted' => DateLabelService::date($transaction->transaction_date),
                     'source' => $transaction->source ?? Transaction::SOURCE_MANUAL,
                 ])->values()->all(),
