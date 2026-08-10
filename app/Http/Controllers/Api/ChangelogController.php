@@ -34,7 +34,10 @@ class ChangelogController extends Controller
 
     public function store(StoreChangelogRequest $request): JsonResponse
     {
-        $changelog = Changelog::create($request->validated());
+        $data = $request->validated();
+        $data['author'] = $data['author'] ?? $request->user()?->name ?? 'Zaku Team';
+
+        $changelog = Changelog::create($data);
 
         return $this->successResponse([
             'id' => $changelog->id,
