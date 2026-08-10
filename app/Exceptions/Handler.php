@@ -3,8 +3,6 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\ThrottleRequestsException;
 use Throwable;
 
@@ -21,6 +19,9 @@ class Handler extends ExceptionHandler
         'password_confirmation',
     ];
 
+    /**
+     * Register the exception handling callbacks for the application.
+     */
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
@@ -28,7 +29,16 @@ class Handler extends ExceptionHandler
         });
     }
 
-    public function render(Request $request, Throwable $e)
+    /**
+     * Render an exception into an HTTP response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Throwable  $e
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Throwable
+     */
+    public function render($request, Throwable $e)
     {
         if ($e instanceof ThrottleRequestsException) {
             $retryAfter = $e->getRetryAfter();
