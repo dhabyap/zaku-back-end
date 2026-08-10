@@ -28,7 +28,7 @@ class Handler extends ExceptionHandler
         });
     }
 
-    public function render(Request $request, Throwable $e): JsonResponse
+    public function render(Request $request, Throwable $e)
     {
         if ($e instanceof ThrottleRequestsException) {
             $retryAfter = $e->getRetryAfter();
