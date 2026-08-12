@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\RecurringTransactionController;
 use App\Http\Controllers\Api\TransactionController;
@@ -82,6 +83,12 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/dashboard/monthly-recap', [DashboardController::class, 'monthlyRecap']);
+
+        Route::get('/budgets', [BudgetController::class, 'index']);
+        Route::post('/budgets', [BudgetController::class, 'store']);
+        Route::put('/budgets/{id}', [BudgetController::class, 'update']);
+        Route::delete('/budgets/{id}', [BudgetController::class, 'destroy']);
+        Route::get('/budgets/{id}/progress', [BudgetController::class, 'progress']);
 
         Route::get('/transactions', [TransactionController::class, 'index']);
         Route::get('/insights', [\App\Http\Controllers\Api\InsightController::class, 'index']);

@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Budget;
 use Illuminate\Validation\Rule;
 
-class UpdateBudgetRequest extends ApiFormRequest
+class StoreBudgetRequest extends ApiFormRequest
 {
     public function authorize(): bool
     {
@@ -15,16 +15,20 @@ class UpdateBudgetRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['sometimes', 'integer', 'gt:0'],
-            'period' => ['sometimes', Rule::in(Budget::VALID_PERIODS)],
+            'category' => ['required', 'string', 'exists:categories,name'],
+            'amount' => ['required', 'integer', 'gt:0'],
+            'period' => ['required', Rule::in(Budget::VALID_PERIODS)],
             'start_date' => ['sometimes', 'date'],
-            'end_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:start_date'],
         ];
     }
 
     public function bodyParameters(): array
     {
         return [
+            'category' => [
+                'description' => 'Nama kategori budget.',
+                'example' => 'MAKANAN',
+            ],
             'amount' => [
                 'description' => 'Nominal budget dalam integer IDR.',
                 'example' => 500000,
@@ -34,12 +38,8 @@ class UpdateBudgetRequest extends ApiFormRequest
                 'example' => 'monthly',
             ],
             'start_date' => [
-                'description' => 'Tanggal mulai budget.',
+                'description' => 'Tanggal mulai budget (default: hari ini).',
                 'example' => '2026-08-01',
-            ],
-            'end_date' => [
-                'description' => 'Tanggal akhir budget (nullable).',
-                'example' => '2026-08-31',
             ],
         ];
     }

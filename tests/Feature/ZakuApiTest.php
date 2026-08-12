@@ -730,6 +730,145 @@ class ZakuApiTest extends TestCase
         ]);
     }
 
+    public function test_budget_crud_and_progress(): void
+    {
+        $user = User::factory()->create([
+            'full_name' => 'Budget Tester',
+            'email' => 'budget@test.com',
+        ]);
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 5000000, 'status' => Wallet::STATUS_ACTIVE]);
+        $food = Category::where('name', 'MAKANAN')->firstOrFail();
+        $headers = $this->authHeaders($user);
+
+        // --- Create budget ---
+        $create = $this->postJson('/api/v1/budgets', [
+            'category' => 'MAKANAN',
+            'amount' => 500000,
+            'period' => 'monthly',
+        ], $headers);
+
+        $create->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.amount', 500000)
+            ->assertJsonPath('data.period', 'monthly');
+
+        $budgetId = $create->json('data.id');
+
+        // --- List budgets ---
+        $this->getJson('/api/v1/budgets', $headers)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.amount', 500000);
+
+        // --- Duplicate budget should fail ---
+        $this->postJson('/api/v1/budgets', [
+            'category' => 'MAKANAN',
+            'amount' => 300000,
+            'period' => 'monthly',
+        ], $headers)->assertStatus(422);
+
+        // --- Update budget ---
+        $this->putJson("/api/v1/budgets/{$budgetId}", [
+            'amount' => 600000,
+        ], $headers)
+            ->assertOk()
+            ->assertJsonPath('data.amount', 600000);
+
+        // --- Create expense for progress ---
+        Transaction::create([
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 400000,
+            'description' => 'Makan siang',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        // --- Progress endpoint (400000/600000 = 66% → waspada) ---
+        $progress = $this->getJson("/api/v1/budgets/{$budgetId}/progress", $headers)
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.spent', 400000)
+            ->assertJsonPath('data.budget.amount', 600000)
+            ->assertJsonPath('data.status', 'waspada');
+
+        // --- Delete budget ---
+        $this->deleteJson("/api/v1/budgets/{$budgetId}", [], $headers)
+            ->assertOk();
+
+        $this->assertDatabaseMissing('budgets', ['id' => $budgetId]);
+    }
+
+    public function test_budget_requires_auth(): void
+    {
+        $this->getJson('/api/v1/budgets')
+            ->assertUnauthorized();
+
+        $this->postJson('/api/v1/budgets', [
+            'category' => 'MAKANAN',
+            'amount' => 500000,
+            'period' => 'monthly',
+        ])->assertUnauthorized();
+    }
+
+    public function test_budget_validation_rejects_invalid_period(): void
+    {
+        $user = User::factory()->create(['email' => 'valid@period.com']);
+        $headers = $this->authHeaders($user);
+
+        $this->postJson('/api/v1/budgets', [
+            'category' => 'MAKANAN',
+            'amount' => 500000,
+            'period' => 'yearly',
+        ], $headers)->assertStatus(422);
+    }
+
+    public function test_budget_validation_rejects_zero_amount(): void
+    {
+        $user = User::factory()->create(['email' => 'zero@amount.com']);
+        $headers = $this->authHeaders($user);
+
+        $this->postJson('/api/v1/budgets', [
+            'category' => 'MAKANAN',
+            'amount' => 0,
+            'period' => 'monthly',
+        ], $headers)->assertStatus(422);
+    }
+
+    public function test_budget_progress_boros_status(): void
+    {
+        $user = User::factory()->create(['email' => 'boros@test.com']);
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 5000000, 'status' => Wallet::STATUS_ACTIVE]);
+        $food = Category::where('name', 'MAKANAN')->firstOrFail();
+        $headers = $this->authHeaders($user);
+
+        $budget = \App\Models\Budget::create([
+            'user_id' => $user->id,
+            'category_id' => $food->id,
+            'amount' => 100000,
+            'period' => 'monthly',
+            'start_date' => now()->startOfMonth()->toDateString(),
+        ]);
+
+        Transaction::create([
+            'wallet_id' => $wallet->id,
+            'category_id' => $food->id,
+            'type' => Transaction::TYPE_EXPENSE,
+            'amount' => 85000,
+            'description' => 'Makan banyak',
+            'status' => Transaction::STATUS_COMPLETED,
+            'source' => Transaction::SOURCE_MANUAL,
+            'transaction_date' => now(),
+        ]);
+
+        $this->getJson("/api/v1/budgets/{$budget->id}/progress", $headers)
+            ->assertOk()
+            ->assertJsonPath('data.percentage', 85)
+            ->assertJsonPath('data.status', 'boros');
+    }
+
     private function authHeaders(User $user): array
     {
         return [
