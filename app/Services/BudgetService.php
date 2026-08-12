@@ -102,24 +102,36 @@ class BudgetService
         }
 
         $now = Carbon::now();
-        $start = $now->copy()->startOfMonth();
-        $end = $now->copy()->endOfMonth();
 
-        $query = Transaction::where('wallet_id', $wallet->id)
-            ->where('category_id', $budget->category_id)
-            ->where('type', Transaction::TYPE_EXPENSE)
-            ->where('status', Transaction::STATUS_COMPLETED);
+        // Derive window from budget's own dates
+        $start = $budget->start_date ? $budget->start_date->copy()->startOfDay() : $now->copy()->startOfMonth();
+        $end = $budget->end_date ? $budget->end_date->copy()->endOfDay() : $this->deriveEndFromStart($start, $budget->period);
 
-        if ($budget->period === Budget::PERIOD_DAILY) {
-            $start = $now->copy()->startOfDay();
+        // Clamp: don't count future expenses
+        if ($end->isAfter($now)) {
             $end = $now->copy()->endOfDay();
-        } elseif ($budget->period === Budget::PERIOD_WEEKLY) {
-            $start = $now->copy()->startOfWeek();
-            $end = $now->copy()->endOfWeek();
         }
 
-        $query->whereBetween('transaction_date', [$start, $end]);
+        // If start is in the future, nothing spent yet
+        if ($start->isAfter($now)) {
+            return 0;
+        }
 
-        return (float) $query->sum('amount');
+        return (float) Transaction::where('wallet_id', $wallet->id)
+            ->where('category_id', $budget->category_id)
+            ->where('type', Transaction::TYPE_EXPENSE)
+            ->where('status', Transaction::STATUS_COMPLETED)
+            ->whereBetween('transaction_date', [$start, $end])
+            ->sum('amount');
+    }
+
+    private function deriveEndFromStart(Carbon $start, string $period): Carbon
+    {
+        return match ($period) {
+            Budget::PERIOD_DAILY => $start->copy()->endOfDay(),
+            Budget::PERIOD_WEEKLY => $start->copy()->endOfWeek(),
+            Budget::PERIOD_MONTHLY => $start->copy()->endOfMonth(),
+            default => $start->copy()->endOfMonth(),
+        };
     }
 }
