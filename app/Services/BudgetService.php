@@ -22,23 +22,22 @@ class BudgetService
     {
         $category = Category::where('name', strtoupper($data['category']))->firstOrFail();
 
-        $existingBudget = Budget::where('user_id', $user->id)
-            ->where('category_id', $category->id)
-            ->where('period', $data['period'])
-            ->first();
+        try {
+            return Budget::create([
+                'user_id' => $user->id,
+                'category_id' => $category->id,
+                'amount' => $data['amount'],
+                'period' => $data['period'],
+                'start_date' => $data['start_date'] ?? Carbon::now()->toDateString(),
+                'end_date' => $data['end_date'] ?? null,
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() === '23000') {
+                throw new \InvalidArgumentException('Budget untuk kategori dan periode ini sudah ada.', 0, $e);
+            }
 
-        if ($existingBudget) {
-            throw new \InvalidArgumentException('Budget untuk kategori dan periode ini sudah ada.');
+            throw $e;
         }
-
-        return Budget::create([
-            'user_id' => $user->id,
-            'category_id' => $category->id,
-            'amount' => $data['amount'],
-            'period' => $data['period'],
-            'start_date' => $data['start_date'] ?? Carbon::now()->toDateString(),
-            'end_date' => $data['end_date'] ?? null,
-        ]);
     }
 
     public function updateBudget(User $user, int $budgetId, array $data): Budget
