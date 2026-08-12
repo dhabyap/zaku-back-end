@@ -10,16 +10,17 @@ return new class extends Migration
     {
         Schema::create('budgets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('category_id')->constrained()->nullOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('category_id');
             $table->bigInteger('amount');
             $table->enum('period', ['daily', 'weekly', 'monthly']);
             $table->date('start_date');
             $table->date('end_date')->nullable();
             $table->timestamps();
 
-            $table->unique(['user_id', 'category_id', 'period']);
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
             $table->index(['user_id', 'period']);
+            $table->index(['user_id', 'category_id', 'period']);
         });
     }
 
