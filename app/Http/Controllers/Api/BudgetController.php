@@ -64,4 +64,14 @@ class BudgetController extends Controller
             return $this->notFoundResponse('Budget not found.');
         }
     }
+
+    public function allProgress(Request $request, BudgetService $service): JsonResponse
+    {
+        $budgets = $service->getUserBudgets($request->user());
+        $progress = $budgets->map(function ($budget) use ($service, $request) {
+            return $service->getBudgetProgress($request->user(), $budget->id);
+        });
+
+        return $this->successResponse($progress, 'Budget progress retrieved');
+    }
 }

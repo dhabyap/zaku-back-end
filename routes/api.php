@@ -88,6 +88,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/budgets', [BudgetController::class, 'store']);
         Route::put('/budgets/{id}', [BudgetController::class, 'update']);
         Route::delete('/budgets/{id}', [BudgetController::class, 'destroy']);
+        Route::get('/budgets/progress', [BudgetController::class, 'allProgress']);
         Route::get('/budgets/{id}/progress', [BudgetController::class, 'progress']);
 
         Route::get('/transactions', [TransactionController::class, 'index']);
