@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\RecurringTransactionController;
+use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -29,39 +30,7 @@ Route::prefix('v1')->group(function () {
         ]);
     });
 
-    Route::get('/stats/public', function () {
-        try {
-            $userCount = \App\Models\User::count();
-            $txCount = \App\Models\Transaction::count();
-            $totalAmount = (int) \App\Models\Transaction::sum('amount');
-            $totalIncome = (int) \App\Models\Transaction::where('type', 'income')->sum('amount');
-            $totalExpense = (int) \App\Models\Transaction::where('type', 'expense')->sum('amount');
-
-            // Active users: transacted in last 30 days (join through wallets)
-            $activeUsers = \App\Models\Transaction::where('transaction_date', '>=', now()->subDays(30))
-                ->join('wallets', 'transactions.wallet_id', '=', 'wallets.id')
-                ->distinct('wallets.user_id')
-                ->count('wallets.user_id');
-        } catch (\Throwable $e) {
-            $userCount = 0;
-            $txCount = 0;
-            $totalAmount = 0;
-            $totalIncome = 0;
-            $totalExpense = 0;
-            $activeUsers = 0;
-        }
-
-        return response()->json([
-            'data' => [
-                'user_count' => $userCount,
-                'active_users' => $activeUsers,
-                'transaction_count' => $txCount,
-                'total_amount' => $totalAmount,
-                'total_income' => $totalIncome,
-                'total_expense' => $totalExpense,
-            ],
-        ]);
-    });
+    Route::get('/stats/public', [StatsController::class, 'publicStats']);
 
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:registration');
