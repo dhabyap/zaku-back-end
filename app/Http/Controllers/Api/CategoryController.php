@@ -26,4 +26,61 @@ class CategoryController extends Controller
 
         return $this->successResponse($categories, 'Daftar kategori berhasil diambil');
     }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:50|unique:categories,name',
+            'icon' => 'required|string|max:4',
+            'type' => 'required|in:income,expense,both',
+        ]);
+
+        $category = Category::create($validated);
+
+        return $this->successResponse([
+            'id' => $category->id,
+            'name' => $category->name,
+            'icon' => $category->icon,
+            'type' => $category->type,
+        ], 'Kategori berhasil ditambahkan', 201);
+    }
+
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $category = Category::find($id);
+        if (!$category) {
+            return $this->notFoundResponse('Kategori tidak ditemukan');
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:50|unique:categories,name,' . $id,
+            'icon' => 'sometimes|required|string|max:4',
+            'type' => 'sometimes|required|in:income,expense,both',
+        ]);
+
+        $category->update($validated);
+
+        return $this->successResponse([
+            'id' => $category->id,
+            'name' => $category->name,
+            'icon' => $category->icon,
+            'type' => $category->type,
+        ], 'Kategori berhasil diperbarui');
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $category = Category::find($id);
+        if (!$category) {
+            return $this->notFoundResponse('Kategori tidak ditemukan');
+        }
+
+        if ($category->transactions()->count() > 0) {
+            return $this->errorResponse('Kategori tidak bisa dihapus karena masih digunakan oleh transaksi', 409);
+        }
+
+        $category->delete();
+
+        return $this->successResponse(null, 'Kategori berhasil dihapus');
+    }
 }
