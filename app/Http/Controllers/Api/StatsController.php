@@ -21,11 +21,8 @@ class StatsController extends Controller
             $totalIncome = (int) Transaction::where('type', 'income')->sum('amount');
             $totalExpense = (int) Transaction::where('type', 'expense')->sum('amount');
 
-            // Active users: transacted in last 30 days (join through wallets)
-            $activeUsers = Transaction::where('transaction_date', '>=', now()->subDays(30))
-                ->join('wallets', 'transactions.wallet_id', '=', 'wallets.id')
-                ->distinct('wallets.user_id')
-                ->count('wallets.user_id');
+            // Active users replaced with total registered users
+            $activeUsers = $userCount;
         } catch (\Throwable $e) {
             $userCount = 0;
             $txCount = 0;
