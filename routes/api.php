@@ -78,9 +78,11 @@ Route::prefix('v1')->group(function () {
         Route::delete('/recurring-transactions/{id}', [RecurringTransactionController::class, 'destroy']);
 
         Route::get('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'index']);
-        Route::post('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'store']);
-        Route::put('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'update']);
-        Route::delete('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'destroy']);
+        Route::middleware('admin')->group(function () {
+            Route::post('/categories', [\App\Http\Controllers\Api\CategoryController::class, 'store']);
+            Route::put('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'update']);
+            Route::delete('/categories/{id}', [\App\Http\Controllers\Api\CategoryController::class, 'destroy']);
+        });
 
         Route::get('/changelogs', [\App\Http\Controllers\Api\ChangelogController::class, 'index']);
         Route::post('/changelogs', [\App\Http\Controllers\Api\ChangelogController::class, 'store']);
