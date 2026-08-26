@@ -202,14 +202,20 @@ class AiTransactionParserService
 
     private function systemPrompt(): string
     {
-        return <<<'PROMPT'
+        $categories = Category::query()
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Category $cat) => $cat->name)
+            ->implode(', ');
+
+        return <<<PROMPT
 Extract one Indonesian finance transaction from the user message.
 Return only valid JSON with keys: response, description, amount, category, type.
 amount must be an integer rupiah value or null.
 type must be "expense", "income", or null.
 Use "income" if the message contains: dapat, dapet, dpt, gaji, bonus, dibayar, transfer masuk, pendapatan, fee.
 Use "expense" if the message contains: beli, bayar, belanja, isi, sewa, tagihan, potong, hutang.
-category should be one of: MAKANAN, TRANSPORT, BELANJA, TAGIHAN, HIBURAN, GAJI, LAINNYA.
+category should be one of: {$categories}.
 If the message has no amount, set description, amount, category, and type to null.
 PROMPT;
     }

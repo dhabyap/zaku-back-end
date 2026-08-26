@@ -22,6 +22,7 @@ class CategoryController extends Controller
                 'name' => $cat->name,
                 'icon' => $cat->icon ?? '📌',
                 'type' => $cat->type,
+                'keywords' => $cat->keywords ?? [],
             ]);
 
         return $this->successResponse($categories, 'Daftar kategori berhasil diambil');
@@ -33,6 +34,8 @@ class CategoryController extends Controller
             'name' => 'required|string|max:50|unique:categories,name',
             'icon' => 'required|string|max:4',
             'type' => 'required|in:income,expense,both',
+            'keywords' => 'nullable|array',
+            'keywords.*' => 'string|max:50',
         ]);
 
         $category = Category::create($validated);
@@ -42,6 +45,7 @@ class CategoryController extends Controller
             'name' => $category->name,
             'icon' => $category->icon,
             'type' => $category->type,
+            'keywords' => $category->keywords ?? [],
         ], 'Kategori berhasil ditambahkan', 201);
     }
 
@@ -56,6 +60,8 @@ class CategoryController extends Controller
             'name' => 'sometimes|required|string|max:50|unique:categories,name,' . $id,
             'icon' => 'sometimes|required|string|max:4',
             'type' => 'sometimes|required|in:income,expense,both',
+            'keywords' => 'nullable|array',
+            'keywords.*' => 'string|max:50',
         ]);
 
         $category->update($validated);
@@ -65,6 +71,7 @@ class CategoryController extends Controller
             'name' => $category->name,
             'icon' => $category->icon,
             'type' => $category->type,
+            'keywords' => $category->keywords ?? [],
         ], 'Kategori berhasil diperbarui');
     }
 
