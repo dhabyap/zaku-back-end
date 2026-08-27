@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBudgetRequest;
 use App\Http\Requests\UpdateBudgetRequest;
+use App\Models\ActivityLog;
+use App\Models\Budget;
 use App\Services\BudgetService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +28,8 @@ class BudgetController extends Controller
         try {
             $budget = $service->createBudget($request->user(), $request->validated());
 
+            ActivityLog::log($budget, 'created', null, $budget->toArray(), null, $request);
+
             return $this->successResponse($budget, 'Budget created', 201);
         } catch (\InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), 422);
@@ -37,6 +41,8 @@ class BudgetController extends Controller
         try {
             $budget = $service->updateBudget($request->user(), $id, $request->validated());
 
+            ActivityLog::log($budget, 'updated', $budget->getOriginal(), $budget->fresh()->toArray(), null, $request);
+
             return $this->successResponse($budget, 'Budget updated');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
             return $this->notFoundResponse('Budget not found.');
@@ -46,7 +52,11 @@ class BudgetController extends Controller
     public function destroy(int $id, Request $request, BudgetService $service): JsonResponse
     {
         try {
+            $budget = Budget::where('user_id', $request->user()->id)->findOrFail($id);
+
             $service->deleteBudget($request->user(), $id);
+
+            ActivityLog::log($budget, 'deleted', $budget->toArray(), null, null, $request);
 
             return $this->successResponse(null, 'Budget deleted');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
