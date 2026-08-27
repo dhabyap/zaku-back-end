@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -40,6 +41,8 @@ class CategoryController extends Controller
 
         $category = Category::create($validated);
 
+        ActivityLog::log($category, 'created', null, $category->toArray(), null, $request);
+
         return $this->successResponse([
             'id' => $category->id,
             'name' => $category->name,
@@ -66,6 +69,8 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
+        ActivityLog::log($category, 'updated', $category->getOriginal(), $category->fresh()->toArray(), null, $request);
+
         return $this->successResponse([
             'id' => $category->id,
             'name' => $category->name,
@@ -87,6 +92,8 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+
+        ActivityLog::log($category, 'deleted', $category->toArray(), null, null, $request);
 
         return $this->successResponse(null, 'Kategori berhasil dihapus');
     }
