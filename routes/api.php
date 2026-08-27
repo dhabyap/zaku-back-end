@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\RecurringTransactionController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\TransactionController;
@@ -52,6 +53,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/dashboard/monthly-recap', [DashboardController::class, 'monthlyRecap']);
+        Route::get('/export/monthly-pdf', [ExportController::class, 'monthlyPdf']);
 
         Route::get('/budgets', [BudgetController::class, 'index']);
         Route::post('/budgets', [BudgetController::class, 'store']);
