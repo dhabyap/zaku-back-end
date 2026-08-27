@@ -13,6 +13,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('zaku:process-recurring')->dailyAt('06:00');
+        $schedule->command('app:check-budget-notifications')->dailyAt('08:00');
     }
 
     /**
