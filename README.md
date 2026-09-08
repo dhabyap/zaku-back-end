@@ -469,6 +469,31 @@ SCRIBE_BASE_URL=https://domain-api-anda.com
 
 Gunakan database production, SMTP production, HTTPS, dan `JWT_SECRET` yang kuat. Jangan commit file `.env` ke repository.
 
+### Update Server Setelah Merge (Penting!)
+
+Setiap kali ada PR yang menambah/mengubah **migration** (file di `database/migrations/`) di-merge ke `main`, database di server harus ikut di-update. Kalau tidak, fitur baru tidak muncul dan bisa error.
+
+Langkah di server (setelah merge PR):
+
+```bash
+cd /path/ke/zaku-backend
+git pull origin main
+php artisan migrate --force
+```
+
+`--force` dipakai supaya artisan tidak tanya konfirmasi di environment production.
+
+Tambahan opsional kalau ada perubahan cache/config:
+
+```bash
+php artisan config:clear
+php artisan cache:clear
+```
+
+Kalau frontend juga berubah, jalankan build ulang di repo frontend (lihat README `zaku-front-end`).
+
+> **Catatan:** Tidak perlu `php artisan migrate:fresh` (itu menghapus semua data). Cukup `php artisan migrate` supaya data user/transaksi lama tetap aman.
+
 ## Dokumentasi Tambahan
 
 Beberapa dokumen project lain tersedia di repository:
