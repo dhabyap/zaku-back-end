@@ -149,7 +149,7 @@ class ZakuApiTest extends TestCase
         ], $headers)
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.description', 'Makan siang')
+            ->assertJsonPath('data.description', 'Siang')
             ->assertJsonPath('data.amount', 35000)
             ->assertJsonPath('data.amount_formatted', '-Rp 35.000')
             ->assertJsonPath('data.type', 'expense')
@@ -228,7 +228,7 @@ class ZakuApiTest extends TestCase
         ], $headers)
             ->assertOk()
             ->assertJsonPath('data.response', 'Oke, makan siang udah dicatat.')
-            ->assertJsonPath('data.description', 'Makan siang')
+            ->assertJsonPath('data.description', 'Siang')
             ->assertJsonPath('data.amount', 35000)
             ->assertJsonPath('data.category', '☕ MAKANAN');
 
@@ -515,7 +515,7 @@ class ZakuApiTest extends TestCase
         $user = User::factory()->create();
         $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 1000000, 'status' => Wallet::STATUS_ACTIVE]);
         $food = Category::where('name', 'MAKANAN')->firstOrFail();
-        $transport = Category::where('name', 'TRANSPORT')->firstOrFail();
+        $transport = Category::where('name', 'TRANSPORTASI')->firstOrFail();
 
         Transaction::create(['wallet_id' => $wallet->id, 'category_id' => $food->id, 'type' => 'expense', 'amount' => 35000, 'description' => 'Makan siang nasi padang', 'status' => 'completed', 'source' => 'manual', 'transaction_date' => now()->subDays(2)]);
         Transaction::create(['wallet_id' => $wallet->id, 'category_id' => $transport->id, 'type' => 'expense', 'amount' => 20000, 'description' => 'Bensin motor', 'status' => 'completed', 'source' => 'manual', 'transaction_date' => now()]);

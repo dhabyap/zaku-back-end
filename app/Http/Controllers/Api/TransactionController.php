@@ -388,6 +388,36 @@ class TransactionController extends Controller
             }
         }
 
+        // Multi‑transaction handling
+        if (isset($parsed['transactions']) && is_array($parsed['transactions'])) {
+            $created = [];
+            foreach ($parsed['transactions'] as $tx) {
+                if ($tx['amount'] === null || $tx['amount'] <= 0 || $tx['category'] === null || $tx['type'] === null) {
+                    continue;
+                }
+                $created[] = $transactions->create(
+                    $request->user(),
+                    $tx['category'],
+                    $tx['type'],
+                    $tx['amount'],
+                    $tx['description'] ?? $message,
+                    Transaction::SOURCE_CHAT,
+                    $message,
+                );
+            }
+            $responseMsg = $parsed['response'] ?? 'Oke, '.count($created).' transaksi dicatat!';
+            return $this->successResponse([
+                'response' => $responseMsg,
+                'transactions' => array_map(fn($t)=>[
+                    'description'=> $t->description,
+                    'amount'=> (int)$t->amount,
+                    'category'=> $t->category?->name ?? 'LAINNYA',
+                    'type'=> $t->type,
+                ], $created),
+                'count' => count($created),
+            ], 'Transaksi berhasil dicatat', 201);
+        }
+
         if ($parsed['amount'] === null || $parsed['amount'] <= 0 || $parsed['category'] === null || $parsed['type'] === null) {
             return $this->successResponse([
                 'response' => $parsed['response'] ?? 'Aku belum menemukan nominal transaksi. Coba tulis nominalnya, contoh: Beli kopi 65 ribu.',
@@ -414,7 +444,7 @@ class TransactionController extends Controller
             'description' => $transaction->description,
             'amount' => (int) $transaction->amount,
             'amount_formatted' => $this->formatAmount((int) $transaction->amount, $transaction->type),
-            'category' => trim(($transaction->category?->icon ?? 'LAINNYA').' '.($transaction->category?->name ?? 'LAINNYA')), // Changed to LAINNYA
+            'category' => trim(($transaction->category?->icon ?? 'LAINNYA').' '.($transaction->category?->name ?? 'LAINNYA')),
             'type' => $transaction->type,
         ], 'Transaksi berhasil dicatat');
     }
