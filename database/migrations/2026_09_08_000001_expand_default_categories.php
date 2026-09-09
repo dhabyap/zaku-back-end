@@ -45,12 +45,17 @@ return new class extends Migration
 
         // Rename legacy TRANSPORT -> TRANSPORTASI (id stays the same, transactions safe)
         $legacy = Category::where('name', 'TRANSPORT')->first();
-        if ($legacy) {
+        $exists = Category::where('name', 'TRANSPORTASI')->exists();
+        if ($legacy && ! $exists) {
             $legacy->update([
                 'name' => 'TRANSPORTASI',
                 'keywords' => ['goride', 'gojek', 'grab', 'bensin', 'parkir', 'tol', 'transport', 'ojek', 'ojol', 'taxi', 'taksi'],
             ]);
+        } elseif ($legacy && $exists) {
+            // TRANSPORTASI already exists, just delete legacy TRANSPORT
+            $legacy->delete();
         }
+
     }
 
     public function down(): void

@@ -18,8 +18,8 @@ class SpendingMapTest extends TestCase
         $user = User::factory()->create();
         $wallet = Wallet::create(['user_id' => $user->id, 'balance' => 0, 'status' => Wallet::STATUS_ACTIVE]);
 
-        $food = Category::create(['name' => 'MAKANAN', 'icon' => '☕', 'type' => 'expense']);
-        $other = Category::create(['name' => 'LAINNYA', 'icon' => '📌', 'type' => 'both']);
+        $food = Category::where('name', 'MAKANAN')->first();
+        $other = Category::where('name', 'LAINNYA')->first();
 
         // transactions in June 2026
         Transaction::create([

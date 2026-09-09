@@ -30,7 +30,7 @@ class TransactionParserServiceTest extends TestCase
             ['Dapet gaji 5 juta', 5000000, 'income', 'GAJI'],
             ['Dpt fee 200rb', 200000, 'income', 'GAJI'],
             ['Belanja bulanan 450000', 450000, 'expense', 'BELANJA'],
-            ['Isi bensin 150 ribu', 150000, 'expense', 'TRANSPORT'],
+            ['Isi bensin 150 ribu', 150000, 'expense', 'TRANSPORTASI'],
             ['Tiket bioskop 125 ribu', 125000, 'expense', 'HIBURAN'],
             ['Print dokumen 85000', 85000, 'expense', 'LAINNYA'],
         ];

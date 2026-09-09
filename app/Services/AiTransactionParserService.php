@@ -113,15 +113,44 @@ class AiTransactionParserService
     private function normalize(string $content): ?array
     {
         $payload = json_decode($this->extractJson($content), true);
-
         if (! is_array($payload)) {
             return null;
         }
-
-        $amount = Arr::get($payload, 'amount');
+        // Multi‑transaction support
+        if (isset($payload['transactions']) && is_array($payload['transactions'])) {
+            $transactions = [];
+            foreach ($payload['transactions'] as $tx) {
+                $amountRaw = Arr::get($tx, 'amount');
+                // Convert amount strings with dot separators (e.g., "13.000")
+                if (is_string($amountRaw)) {
+                    $amountRaw = preg_replace('/[^0-9]/', '', $amountRaw);
+                }
+                $amount = (int) $amountRaw;
+                $type = Arr::get($tx, 'type');
+                if (! is_numeric($amount) || $amount <= 0 || ! in_array($type, [Transaction::TYPE_EXPENSE, Transaction::TYPE_INCOME], true)) {
+                    // skip invalid transaction
+                    continue;
+                }
+                $transactions[] = [
+                    'description' => $this->cleanDescription($this->nullableString(Arr::get($tx, 'description'))),
+                    'amount' => $amount,
+                    'category' => $this->resolveCategory($this->nullableString(Arr::get($tx, 'category')), $type),
+                    'type' => $type,
+                ];
+            }
+            return [
+                'transactions' => $transactions,
+                'response' => $this->nullableString(Arr::get($payload, 'response')),
+            ];
+        }
+        // Single transaction fallback (original behaviour)
+        $amountRaw = Arr::get($payload, 'amount');
+        if (is_string($amountRaw)) {
+            $amountRaw = preg_replace('/[^0-9]/', '', $amountRaw);
+        }
+        $amount = (int) $amountRaw;
         $type = Arr::get($payload, 'type');
-
-        if (! is_numeric($amount) || (int) $amount <= 0 || ! in_array($type, [Transaction::TYPE_EXPENSE, Transaction::TYPE_INCOME], true)) {
+        if (! is_numeric($amount) || $amount <= 0 || ! in_array($type, [Transaction::TYPE_EXPENSE, Transaction::TYPE_INCOME], true)) {
             return [
                 'description' => null,
                 'amount' => null,
@@ -130,10 +159,9 @@ class AiTransactionParserService
                 'response' => $this->nullableString(Arr::get($payload, 'response')),
             ];
         }
-
         return [
-            'description' => $this->nullableString(Arr::get($payload, 'description')),
-            'amount' => (int) $amount,
+            'description' => $this->cleanDescription($this->nullableString(Arr::get($payload, 'description'))),
+            'amount' => $amount,
             'category' => $this->resolveCategory($this->nullableString(Arr::get($payload, 'category')), $type),
             'type' => $type,
             'response' => $this->nullableString(Arr::get($payload, 'response')),
@@ -187,6 +215,20 @@ class AiTransactionParserService
         }
 
         return $content;
+    }
+
+    private function cleanDescription(?string $description): ?string
+    {
+        if ($description === null || trim($description) === '') {
+            return null;
+        }
+        $fillers = ['beli', 'bayar', 'makan', 'minum', 'buat', 'untuk', 'pengeluaran', 'pemasukan', 'isi', 'top up'];
+        $words = preg_split('/\s+/', trim($description));
+        if (count($words) > 0 && in_array(Str::lower($words[0]), $fillers, true)) {
+            array_shift($words);
+        }
+        $result = trim(implode(' ', $words));
+        return $result === '' ? $description : Str::ucfirst($result);
     }
 
     private function nullableString(mixed $value): ?string

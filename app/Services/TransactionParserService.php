@@ -27,23 +27,23 @@ class TransactionParserService
         ];
     }
 
+
     private function parseAmount(string $message): int
     {
-        if (preg_match('/(\d+(?:[.,]\d+)?)\s*(juta|jt|miliar|milyar|ribu|rb|k)\b/u', $message, $matches)) {
-            $number = (float) str_replace(',', '.', $matches[1]);
-            $multiplier = match ($matches[2]) {
+        // Handle formats like "13.000", "13,000", "13k", "13 rb", etc.
+        if (preg_match('/(\d[\d.,]*)\s*(juta|jt|miliar|milyar|ribu|rb|k)\b/iu', $message, $matches)) {
+            $numberStr = str_replace(['.', ','], ['', '.'], $matches[1]);
+            $number = (float) $numberStr;
+            $multiplier = match (strtolower($matches[2])) {
                 'juta', 'jt' => 1000000,
                 'miliar', 'milyar' => 1000000000,
                 default => 1000,
             };
-
             return (int) round($number * $multiplier);
         }
-
-        if (preg_match('/(?:rp\s*)?(\d[\d.,]*)/u', $message, $matches)) {
+        if (preg_match('/(?:rp\s*)?(\d[\d.,]*)/iu', $message, $matches)) {
             return (int) preg_replace('/[^\d]/', '', $matches[1]);
         }
-
         return 0;
     }
 
@@ -92,7 +92,7 @@ class TransactionParserService
     private function parseDescription(string $message, int $amount): string
     {
         $description = preg_replace('/(?:rp\s*)?\d[\d.,]*(?:\s*(?:juta|jt|miliar|milyar|ribu|rb|k))?/iu', '', $message) ?? $message;
-        $description = preg_replace('/\b(beli|bayar|buat|untuk|pengeluaran|pemasukan|dapat|transfer masuk)\b/iu', '', $description) ?? $description;
+        $description = preg_replace('/\b(beli|bayar|buat|untuk|pengeluaran|pemasukan|dapat|transfer masuk|makan)\b/iu', '', $description) ?? $description;
         $description = trim((string) preg_replace('/\s+/', ' ', $description));
 
         if ($description === '') {
