@@ -66,7 +66,7 @@ class ActivityLog extends Model
         static::create([
             'user_id' => $user?->id ?? request()?->user()?->id,
             'loggable_id' => 0,
-            'loggable_type' => null,
+            'loggable_type' => 'page_view',
             'event' => 'page_view',
             'old_values' => null,
             'new_values' => ['page' => $page],
