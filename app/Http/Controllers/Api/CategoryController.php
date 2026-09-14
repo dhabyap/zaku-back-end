@@ -15,16 +15,18 @@ class CategoryController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $categories = Category::query()
-            ->orderBy('name')
-            ->get()
-            ->map(fn (Category $cat) => [
-                'id' => $cat->id,
-                'name' => $cat->name,
-                'icon' => $cat->icon ?? '📌',
-                'type' => $cat->type,
-                'keywords' => $cat->keywords ?? [],
-            ]);
+        $categories = cache()->remember('categories:all', 3600, function () {
+            return Category::query()
+                ->orderBy('name')
+                ->get()
+                ->map(fn (Category $cat) => [
+                    'id' => $cat->id,
+                    'name' => $cat->name,
+                    'icon' => $cat->icon ?? '📌',
+                    'type' => $cat->type,
+                    'keywords' => $cat->keywords ?? [],
+                ]);
+        });
 
         return $this->successResponse($categories, 'Daftar kategori berhasil diambil');
     }
@@ -41,6 +43,7 @@ class CategoryController extends Controller
 
         $category = Category::create($validated);
 
+        cache()->forget('categories:all');
         ActivityLog::log($category, 'created', null, $category->toArray(), null, $request);
 
         return $this->successResponse([
@@ -69,6 +72,7 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
+        cache()->forget('categories:all');
         ActivityLog::log($category, 'updated', $category->getOriginal(), $category->fresh()->toArray(), null, $request);
 
         return $this->successResponse([
@@ -93,6 +97,7 @@ class CategoryController extends Controller
 
         $category->delete();
 
+        cache()->forget('categories:all');
         ActivityLog::log($category, 'deleted', $category->toArray(), null, null, $request);
 
         return $this->successResponse(null, 'Kategori berhasil dihapus');

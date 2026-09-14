@@ -15,30 +15,33 @@ class StatsController extends Controller
     public function publicStats(): JsonResponse
     {
         try {
-            $userCount = User::count();
-            $txCount = Transaction::count();
-            $totalAmount = (int) Transaction::sum('amount');
-            $totalIncome = (int) Transaction::where('type', 'income')->sum('amount');
-            $totalExpense = (int) Transaction::where('type', 'expense')->sum('amount');
+            $stats = cache()->remember('stats:public', 300, function () {
+                $userCount = User::count();
+                $txCount = Transaction::count();
+                $totalAmount = (int) Transaction::sum('amount');
+                $totalIncome = (int) Transaction::where('type', 'income')->sum('amount');
+                $totalExpense = (int) Transaction::where('type', 'expense')->sum('amount');
 
-            // Active users replaced with total registered users
-            $activeUsers = $userCount;
+                return [
+                    'user_count' => $userCount,
+                    'active_users' => $userCount,
+                    'transaction_count' => $txCount,
+                    'total_amount' => $totalAmount,
+                    'total_income' => $totalIncome,
+                    'total_expense' => $totalExpense,
+                ];
+            });
         } catch (\Throwable $e) {
-            $userCount = 0;
-            $txCount = 0;
-            $totalAmount = 0;
-            $totalIncome = 0;
-            $totalExpense = 0;
-            $activeUsers = 0;
+            $stats = [
+                'user_count' => 0,
+                'active_users' => 0,
+                'transaction_count' => 0,
+                'total_amount' => 0,
+                'total_income' => 0,
+                'total_expense' => 0,
+            ];
         }
 
-        return $this->successResponse([
-            'user_count' => $userCount,
-            'active_users' => $activeUsers,
-            'transaction_count' => $txCount,
-            'total_amount' => $totalAmount,
-            'total_income' => $totalIncome,
-            'total_expense' => $totalExpense,
-        ], 'Statistik publik berhasil diambil');
+        return $this->successResponse($stats, 'Statistik publik berhasil diambil');
     }
 }

@@ -12,34 +12,38 @@ class DashboardService
 {
     public function getDashboard(User $user): array
     {
-        $start = now()->startOfMonth();
-        $end = now()->endOfMonth();
+        $cacheKey = "dashboard:{$user->id}:" . now()->format('Y-m');
 
-        $monthlyQuery = $this->completedTransactions($user)
-            ->whereBetween('transaction_date', [$start, $end]);
+        return cache()->remember($cacheKey, 300, function () use ($user) {
+            $start = now()->startOfMonth();
+            $end = now()->endOfMonth();
 
-        $totalIncome = (int) (clone $monthlyQuery)->where('type', Transaction::TYPE_INCOME)->sum('amount');
-        $totalExpense = (int) (clone $monthlyQuery)->where('type', Transaction::TYPE_EXPENSE)->sum('amount');
-        $netCashflow = $totalIncome - $totalExpense;
-        $monthlyBudget = (int) $user->monthly_budget;
-        $budgetUsedPercentage = $this->budgetUsedPercentage($monthlyBudget, $totalExpense);
-        $expenseByCategory = $this->expenseByCategory($user, $start, $end, $totalExpense);
+            $monthlyQuery = $this->completedTransactions($user)
+                ->whereBetween('transaction_date', [$start, $end]);
 
-        return [
-            'current_month_balance' => $netCashflow,
-            'total_income' => $totalIncome,
-            'total_expense' => $totalExpense,
-            'net_cashflow' => $netCashflow,
-            'monthly_budget' => $monthlyBudget,
-            'budget_remaining' => $monthlyBudget - $totalExpense,
-            'budget_used_percentage' => $budgetUsedPercentage,
-            'budget_status' => $this->budgetStatus($monthlyBudget, $budgetUsedPercentage),
-            'top_spending_category' => $this->topSpendingCategory($expenseByCategory),
-            'insight_strip' => $this->buildInsight($user),
-            'recent_transactions' => $this->recentTransactions($user),
-            'expense_by_category' => $expenseByCategory,
-            'monthly_recap' => $this->getMonthlyRecap($user),
-        ];
+            $totalIncome = (int) (clone $monthlyQuery)->where('type', Transaction::TYPE_INCOME)->sum('amount');
+            $totalExpense = (int) (clone $monthlyQuery)->where('type', Transaction::TYPE_EXPENSE)->sum('amount');
+            $netCashflow = $totalIncome - $totalExpense;
+            $monthlyBudget = (int) $user->monthly_budget;
+            $budgetUsedPercentage = $this->budgetUsedPercentage($monthlyBudget, $totalExpense);
+            $expenseByCategory = $this->expenseByCategory($user, $start, $end, $totalExpense);
+
+            return [
+                'current_month_balance' => $netCashflow,
+                'total_income' => $totalIncome,
+                'total_expense' => $totalExpense,
+                'net_cashflow' => $netCashflow,
+                'monthly_budget' => $monthlyBudget,
+                'budget_remaining' => $monthlyBudget - $totalExpense,
+                'budget_used_percentage' => $budgetUsedPercentage,
+                'budget_status' => $this->budgetStatus($monthlyBudget, $budgetUsedPercentage),
+                'top_spending_category' => $this->topSpendingCategory($expenseByCategory),
+                'insight_strip' => $this->buildInsight($user),
+                'recent_transactions' => $this->recentTransactions($user),
+                'expense_by_category' => $expenseByCategory,
+                'monthly_recap' => $this->getMonthlyRecap($user),
+            ];
+        });
     }
 
     public function getMonthlyRecap(User $user, int $month = null, int $year = null): array
