@@ -11,6 +11,9 @@ class InsightService
     public function getInsights(User $user, ?Carbon $date = null): array
     {
         $date = $date ?? Carbon::now();
+        $cacheKey = "insights:{$user->id}:" . $date->format('Y-m');
+
+        return cache()->remember($cacheKey, 300, function () use ($user, $date) {
         $start = $date->copy()->startOfMonth();
         $end = $date->copy()->endOfMonth();
 
@@ -88,5 +91,6 @@ class InsightService
         }
 
         return $insights;
+        });
     }
 }

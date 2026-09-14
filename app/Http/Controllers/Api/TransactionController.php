@@ -109,6 +109,8 @@ class TransactionController extends Controller
             'description' => $transaction->description,
         ], null, 'Transaction deleted and wallet adjusted', $request);
 
+        cache()->forget("dashboard:{$request->user()->id}:" . now()->format('Y-m'));
+
         return $this->successResponse([
             'id' => $id,
             'balance' => $balance,
@@ -186,7 +188,20 @@ class TransactionController extends Controller
     public function index(Request $request): JsonResponse
     {
         $filter = strtoupper((string) $request->query('filter', 'SEMUA'));
-        $query = $this->baseQuery($request)->with('category');
+        $query = $this->baseQuery($request)
+            ->with('category:id,name,icon')
+            ->select([
+                'id',
+                'wallet_id',
+                'category_id',
+                'type',
+                'amount',
+                'description',
+                'source',
+                'transaction_date',
+                'status',
+                'created_at',
+            ]);
         $limit = max(1, min((int) $request->query('limit', 100), 100));
         $page = max(1, (int) $request->query('page', 1));
 

@@ -46,6 +46,7 @@ class TransactionService
                 $wallet->deductBalance($amount);
             }
 
+            cache()->forget("dashboard:{$user->id}:" . now()->format('Y-m'));
             return $transaction->load('category');
         });
     }
@@ -99,6 +100,7 @@ class TransactionService
                 }
             }
 
+            cache()->forget("dashboard:{$transaction->wallet->user_id}:" . now()->format('Y-m'));
             return $transaction->load('category');
         });
     }
