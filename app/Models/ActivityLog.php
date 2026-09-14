@@ -83,8 +83,8 @@ class ActivityLog extends Model
     {
         static::create([
             'user_id' => $user?->id ?? request()?->user()?->id,
-            'loggable_id' => null,
-            'loggable_type' => null,
+            'loggable_id' => 0,
+            'loggable_type' => 'feature_used',
             'event' => 'feature_used',
             'old_values' => null,
             'new_values' => array_merge(['feature' => $feature], $data),
