@@ -93,6 +93,12 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/changelogs', [\App\Http\Controllers\Api\ChangelogController::class, 'index']);
         Route::post('/changelogs', [\App\Http\Controllers\Api\ChangelogController::class, 'store']);
+
+        // Analytics
+        Route::get('/analytics/activity', [\App\Http\Controllers\Api\AnalyticsController::class, 'activity']);
+        Route::middleware('admin')->group(function () {
+            Route::get('/analytics/dashboard', [\App\Http\Controllers\Api\AnalyticsController::class, 'dashboard']);
+        });
     });
 
 });

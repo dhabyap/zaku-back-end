@@ -46,6 +46,12 @@ class TransactionController extends Controller
             'category' => $category->name,
         ], 'Transaction created', $request);
 
+        ActivityLog::logFeature('create_transaction', [
+            'type' => $transaction->type,
+            'category' => $category->name,
+            'source' => Transaction::SOURCE_MANUAL,
+        ], $request->user());
+
         return $this->successResponse([
             'id' => $transaction->id,
             'description' => $transaction->description,
@@ -371,6 +377,11 @@ class TransactionController extends Controller
     ): JsonResponse {
         $message = $request->string('message')->toString();
         $parsed = $aiParser->parse($message);
+
+        ActivityLog::logFeature('ai_chat', [
+            'provider' => $parsed['provider'] ?? 'unknown',
+            'success' => $parsed['amount'] !== null && $parsed['amount'] > 0,
+        ], $request->user());
 
         if ($parsed['provider'] === 'local') {
             $localParsed = $parser->parse($message);

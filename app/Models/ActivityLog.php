@@ -57,4 +57,74 @@ class ActivityLog extends Model
             'user_agent' => $request?->userAgent(),
         ]);
     }
+
+    /**
+     * Log page view (tanpa loggable entity).
+     */
+    public static function logPageView(string $page, $user = null): void
+    {
+        static::create([
+            'user_id' => $user?->id ?? request()?->user()?->id,
+            'loggable_id' => null,
+            'loggable_type' => null,
+            'event' => 'page_view',
+            'old_values' => null,
+            'new_values' => ['page' => $page],
+            'description' => "User viewed {$page}",
+            'ip_address' => request()?->ip(),
+            'user_agent' => request()?->userAgent(),
+        ]);
+    }
+
+    /**
+     * Log feature usage.
+     */
+    public static function logFeature(string $feature, array $data = [], $user = null): void
+    {
+        static::create([
+            'user_id' => $user?->id ?? request()?->user()?->id,
+            'loggable_id' => null,
+            'loggable_type' => null,
+            'event' => 'feature_used',
+            'old_values' => null,
+            'new_values' => array_merge(['feature' => $feature], $data),
+            'description' => "Feature used: {$feature}",
+            'ip_address' => request()?->ip(),
+            'user_agent' => request()?->userAgent(),
+        ]);
+    }
+
+    /**
+     * Get analytics summary.
+     */
+    public static function getAnalytics(?string $type = null, int $days = 30): array
+    {
+        $start = now()->subDays($days);
+        $query = static::where('created_at', '>=', $start);
+
+        if ($type) {
+            $query->where('event', $type);
+        }
+
+        $total = $query->count();
+
+        $byDay = (clone $query)
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        $byPage = (clone $query)
+            ->where('event', 'page_view')
+            ->selectRaw("JSON_EXTRACT(new_values, '$.page') as page, COUNT(*) as count")
+            ->groupBy('page')
+            ->orderByDesc('count')
+            ->get();
+
+        return [
+            'total' => $total,
+            'by_day' => $byDay,
+            'by_page' => $byPage,
+        ];
+    }
 }
