@@ -71,7 +71,7 @@ class TransactionController extends Controller
             ->find($id);
 
         if (! $transaction) {
-            return $this->notFoundResponse('Transaction not found.');
+            return $this->notFoundResponse('Transaksi tidak ditemukan atau sudah dihapus.');
         }
 
         return $this->successResponse([
@@ -91,7 +91,7 @@ class TransactionController extends Controller
             ->find($id);
 
         if (! $transaction) {
-            return $this->notFoundResponse('Transaction not found.');
+            return $this->notFoundResponse('Transaksi tidak ditemukan atau sudah dihapus.');
         }
 
         $balance = DB::transaction(function () use ($transaction) {
@@ -329,7 +329,7 @@ class TransactionController extends Controller
             ->find($id);
 
         if (! $transaction) {
-            return $this->notFoundResponse('Transaction not found.');
+            return $this->notFoundResponse('Transaksi tidak ditemukan atau sudah dihapus.');
         }
 
         $category = null;

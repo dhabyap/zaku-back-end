@@ -18,21 +18,21 @@ class JwtAuthenticate
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->bearerToken()) {
-            return $this->unauthorizedResponse('Authorization token is required.');
+            return $this->unauthorizedResponse('Silakan masuk terlebih dahulu untuk melakukan ini.');
         }
 
         try {
             $user = JWTAuth::parseToken()->authenticate();
         } catch (TokenExpiredException) {
-            return $this->unauthorizedResponse('Authorization token has expired.');
+            return $this->unauthorizedResponse('Sesi Anda sudah berakhir. Silakan masuk kembali.');
         } catch (TokenInvalidException) {
-            return $this->unauthorizedResponse('Authorization token is invalid.');
+            return $this->unauthorizedResponse('Sesi tidak dapat digunakan. Silakan masuk kembali.');
         } catch (JWTException) {
-            return $this->unauthorizedResponse('Authorization token could not be processed.');
+            return $this->unauthorizedResponse('Sesi tidak berakses. Silakan masuk kembali.');
         }
 
         if (! $user) {
-            return $this->unauthorizedResponse('User could not be authenticated.');
+            return $this->unauthorizedResponse('Akun diketikan tidak akabilir. Silakan masuk kembali.');
         }
 
         auth()->setUser($user);

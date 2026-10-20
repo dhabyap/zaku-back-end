@@ -16,7 +16,7 @@ abstract class ApiFormRequest extends FormRequest
             'data' => [
                 'errors' => $validator->errors(),
             ],
-            'message' => 'Validation failed',
+            'message' => 'Ada data yang belum sesuai. Periksa bagian yang ditandai, lalu coba lagi.',
         ], 422));
     }
 }

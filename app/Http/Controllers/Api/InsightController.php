@@ -18,6 +18,6 @@ class InsightController extends Controller
 
         $insights = $service->getInsights($user);
 
-        return $this->successResponse($insights, 'Insights retrieved');
+        return $this->successResponse($insights, 'Ringkasan insight berhasil dimuat');
     }
 }

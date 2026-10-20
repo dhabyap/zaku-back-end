@@ -124,7 +124,7 @@ class AuthController extends Controller
         }
 
         if (! $user->isVerified() || $user->verification_code) {
-            return $this->forbiddenResponse('Email address is not verified.');
+            return $this->forbiddenResponse('Email Anda belum diverifikasi. Buka email dan klik tautan verifikasi sebelum masuk.');
         }
 
         $user->forceFill(['last_login_at' => now()])->save();
@@ -145,7 +145,7 @@ class AuthController extends Controller
         return $this->successResponse([
             'token' => $token,
             'user' => new UserResource($user->load('wallet')),
-        ], 'Login successful');
+        ], 'Anda berhasil masuk');
     }
 
     /**
@@ -174,7 +174,7 @@ class AuthController extends Controller
             'id' => $user->id,
             'name' => $user->full_name,
             'email' => $user->email,
-        ], 'Profile retrieved successfully');
+        ], 'Data profil berhasil dimuat');
     }
 
     /**
@@ -219,7 +219,7 @@ class AuthController extends Controller
         return $this->successResponse([
             'access_token' => $token,
             'refresh_token' => $token,
-        ], 'Token refreshed successfully');
+        ], 'Sesi masuk berhasil diperbarui');
     }
 
     /**
@@ -240,7 +240,7 @@ class AuthController extends Controller
     {
         JWTAuth::parseToken()->invalidate();
 
-        return $this->successResponse(null, 'Successfully logged out');
+        return $this->successResponse(null, 'Anda berhasil keluar');
     }
 
     public function resetPassword(ResetPasswordRequest $request): JsonResponse
@@ -249,22 +249,22 @@ class AuthController extends Controller
         $row = DB::table('password_reset_tokens')->where('email', $email)->first();
 
         if (! $row || ! Hash::check($request->string('token')->toString(), $row->token)) {
-            return $this->errorResponse('Invalid password reset token.', 422, [
-                'token' => ['Invalid password reset token.'],
+            return $this->errorResponse('Tautan ubah kata sandi tidak valid. Coba minta tautan baru.', 422, [
+                'token' => ['Tautan ubah kata sandi tidak valid. Coba minta tautan baru.'],
             ]);
         }
 
         $expiresAt = Carbon::parse($row->created_at)->addMinutes(config('auth.passwords.users.expire', 60));
         if ($expiresAt->isPast()) {
-            return $this->errorResponse('Password reset token has expired.', 422, [
-                'token' => ['Password reset token has expired.'],
+            return $this->errorResponse('Tautan ubah kata sandi sudah kedaluwarsa. Coba minta tautan baru.', 422, [
+                'token' => ['Tautan ubah kata sandi sudah kedaluwarsa. Coba minta tautan baru.'],
             ]);
         }
 
         $user = User::where('email', $email)->first();
         if (! $user) {
-            return $this->errorResponse('Invalid password reset token.', 422, [
-                'token' => ['Invalid password reset token.'],
+            return $this->errorResponse('Tautan ubah kata sandi tidak valid. Coba minta tautan baru.', 422, [
+                'token' => ['Tautan ubah kata sandi tidak valid. Coba minta tautan baru.'],
             ]);
         }
 
@@ -274,7 +274,7 @@ class AuthController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $email)->delete();
 
-        return $this->successResponse(null, 'Password has been reset successfully');
+        return $this->successResponse(null, 'Kata sandi berhasil diubah');
     }
 
     /**
@@ -307,19 +307,19 @@ class AuthController extends Controller
             ->first();
 
         if (! $verificationCode) {
-            return $this->notFoundResponse('Verification code not found.');
+            return $this->notFoundResponse('Kode verifikasi tidak ditemukan. Coba periksa email atau minta kode baru.');
         }
 
         if ($verificationCode->isUsed()) {
             return $this->errorResponse(
-                'Verification code has already been used.',
+                'Kode verifikasi sudah pernah digunakan. Coba kirim kode baru.',
                 422
             );
         }
 
         if ($verificationCode->isExpired()) {
             return $this->errorResponse(
-                'Verification code has expired.',
+                'Kode verifikasi sudah kedaluwarsa. Coba kirim kode baru.',
                 422
             );
         }
@@ -337,7 +337,7 @@ class AuthController extends Controller
 
         return $this->successResponse(
             null,
-            'Email verified successfully'
+            'Email berhasil diverifikasi'
         );
     }
 
@@ -362,11 +362,11 @@ class AuthController extends Controller
         $user = User::where('email', $request->string('email')->lower())->first();
 
         if (! $user) {
-            return $this->successResponse(null, 'Verification code sent to your email');
+            return $this->successResponse(null, 'Kode verifikasi sudah dikirim ke email Anda');
         }
 
         if ($user->isVerified()) {
-            return $this->errorResponse('Email address is already verified.', 422);
+            return $this->errorResponse('Email ini sudah diverifikasi. Silakan masuk.', 422);
         }
 
         $verificationCode = DB::transaction(function () use ($user) {
@@ -380,7 +380,7 @@ class AuthController extends Controller
 
         $this->sendVerificationEmail($user, $verificationCode->code);
 
-        return $this->successResponse(null, 'Verification code sent to your email');
+        return $this->successResponse(null, 'Kode verifikasi sudah dikirim ke email Anda');
     }
 
     /**
@@ -410,14 +410,14 @@ class AuthController extends Controller
         $user = $request->user();
 
         if (! Hash::check($request->string('old_password')->toString(), $user->password)) {
-            return $this->errorResponse('Old password is incorrect.', 422);
+            return $this->errorResponse('Kata sandi saat ini belum benar. Periksa kembali, lalu coba lagi.', 422);
         }
 
         $user->forceFill([
             'password' => $request->string('new_password')->toString(),
         ])->save();
 
-        return $this->successResponse(null, 'Password changed successfully');
+        return $this->successResponse(null, 'Kata sandi berhasil diubah');
     }
 
     /**
@@ -457,7 +457,7 @@ class AuthController extends Controller
             });
         }
 
-        return $this->successResponse(null, 'Password reset link sent to your email');
+        return $this->successResponse(null, 'Tautan ubah kata sandi sudah dikirim ke email Anda');
     }
 
     private function createVerificationCode(User $user): VerificationCode

@@ -60,7 +60,7 @@ class NotificationController extends Controller
 
         $notification->update(['is_read' => true]);
 
-        return $this->successResponse($notification, 'Notification marked as read');
+        return $this->successResponse($notification, 'Notifikasi berhasil ditandai sudah dibaca');
     }
 
     /**
@@ -72,6 +72,6 @@ class NotificationController extends Controller
             ->where('is_read', false)
             ->update(['is_read' => true]);
 
-        return $this->successResponse(null, 'All notifications marked as read');
+        return $this->successResponse(null, 'Semua notifikasi berhasil ditandai sudah dibaca');
     }
 }
