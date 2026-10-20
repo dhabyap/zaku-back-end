@@ -3,7 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Routing\Exceptions\ThrottleRequestsException;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -41,8 +41,8 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $e)
     {
         if ($e instanceof ThrottleRequestsException) {
-            $retryAfter = $e->getRetryAfter();
-            $seconds = is_int($retryAfter) ? $retryAfter : (int) $retryAfter;
+            $headers = $e->getHeaders();
+            $seconds = max(0, (int) ($headers['Retry-After'] ?? 0));
 
             $retryAt = \Illuminate\Support\Carbon::now()->addSeconds($seconds);
 
