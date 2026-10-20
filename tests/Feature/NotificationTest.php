@@ -119,4 +119,67 @@ class NotificationTest extends TestCase
             'type' => 'budget_warning',
         ]);
     }
+
+    public function test_expense_creation_immediately_creates_budget_warning(): void
+    {
+        $user = User::factory()->create();
+        Wallet::create(['user_id' => $user->id, 'balance_cents' => 1000000, 'status' => 'active']);
+        $category = Category::where('name', 'MAKANAN')->firstOrFail();
+        Budget::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'amount' => 100000,
+            'period' => 'monthly',
+            'start_date' => now()->startOfMonth()->toDateString(),
+            'end_date' => now()->endOfMonth()->toDateString(),
+        ]);
+
+        app(\App\Services\TransactionService::class)->create(
+            $user,
+            $category,
+            \App\Models\Transaction::TYPE_EXPENSE,
+            80000,
+            'Makan',
+        );
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $user->id,
+            'type' => 'budget_warning',
+        ]);
+    }
+
+    public function test_budget_risk_notification_is_created_after_warning(): void
+    {
+        $user = User::factory()->create();
+        $wallet = Wallet::create(['user_id' => $user->id, 'balance_cents' => 0, 'status' => 'active']);
+        $category = Category::where('name', 'MAKANAN')->firstOrFail();
+        $budget = Budget::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'amount' => 100000,
+            'period' => 'monthly',
+            'start_date' => now()->startOfMonth()->toDateString(),
+            'end_date' => now()->endOfMonth()->toDateString(),
+        ]);
+
+        foreach ([['budget_warning', 80000], ['budget_risk', 25000]] as [$expectedType, $amount]) {
+            \App\Models\Transaction::create([
+                'wallet_id' => $wallet->id,
+                'category_id' => $category->id,
+                'type' => \App\Models\Transaction::TYPE_EXPENSE,
+                'amount' => $amount,
+                'description' => 'Budget test',
+                'status' => \App\Models\Transaction::STATUS_COMPLETED,
+                'source' => \App\Models\Transaction::SOURCE_MANUAL,
+                'transaction_date' => now(),
+            ]);
+
+            $this->artisan('app:check-budget-notifications')->assertExitCode(0);
+            $this->assertDatabaseHas('notifications', [
+                'user_id' => $user->id,
+                'type' => $expectedType,
+                'data->budget_id' => $budget->id,
+            ]);
+        }
+    }
 }

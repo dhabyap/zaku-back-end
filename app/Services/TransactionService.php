@@ -44,6 +44,7 @@ class TransactionService
                 $wallet->addBalance($amount);
             } elseif ($type === Transaction::TYPE_EXPENSE) {
                 $wallet->deductBalance($amount);
+                app(BudgetNotificationService::class)->checkForUser($user);
             }
 
             cache()->forget("dashboard:{$user->id}:" . now()->format('Y-m'));
@@ -98,6 +99,10 @@ class TransactionService
                 } else {
                     $wallet->deductBalance($newAmount);
                 }
+            }
+
+            if ($newType === Transaction::TYPE_EXPENSE || $category !== null) {
+                app(BudgetNotificationService::class)->checkForUser($wallet->user);
             }
 
             cache()->forget("dashboard:{$transaction->wallet->user_id}:" . now()->format('Y-m'));
