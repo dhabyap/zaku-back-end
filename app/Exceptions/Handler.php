@@ -44,12 +44,19 @@ class Handler extends ExceptionHandler
             $retryAfter = $e->getRetryAfter();
             $seconds = is_int($retryAfter) ? $retryAfter : (int) $retryAfter;
 
+            $retryAt = \Illuminate\Support\Carbon::now()->addSeconds($seconds);
+
             return response()->json([
                 'success' => false,
                 'status' => 'error',
                 'message' => "Terlalu banyak permintaan. Silakan tunggu {$seconds} detik lagi.",
                 'retry_after' => $seconds,
-            ], 429);
+                'retry_at' => $retryAt->toIso8601String(),
+                'retry_at_local' => $retryAt->format('Y-m-d H:i:s'),
+            ], 429)->withHeaders([
+                'Retry-After' => $seconds,
+                'X-RateLimit-Reset' => $retryAt->timestamp,
+            ]);
         }
 
         return parent::render($request, $e);
