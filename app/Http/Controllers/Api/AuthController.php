@@ -91,6 +91,7 @@ class AuthController extends Controller
      *
      * @bodyParam email string required Email user. Example: user@example.com
      * @bodyParam password string required Password user. Example: password123
+     * @bodyParam remember boolean Jika true, token berlaku 30 hari. Example: true
      *
      * @response {
      *   "status": "success",
@@ -128,8 +129,21 @@ class AuthController extends Controller
 
         $user->forceFill(['last_login_at' => now()])->save();
 
+        $jwtFactory = JWTAuth::factory();
+        $defaultTtl = $jwtFactory->getTTL();
+        $jwtFactory->setTTL($request->boolean('remember')
+            ? (int) config('jwt.remember_ttl', 43200)
+            : (int) config('jwt.ttl', 60));
+
+        try {
+            $token = JWTAuth::fromUser($user);
+        } finally {
+            // Avoid carrying per-login TTL into later requests in long-lived workers.
+            $jwtFactory->setTTL($defaultTtl);
+        }
+
         return $this->successResponse([
-            'token' => JWTAuth::fromUser($user),
+            'token' => $token,
             'user' => new UserResource($user->load('wallet')),
         ], 'Login successful');
     }
