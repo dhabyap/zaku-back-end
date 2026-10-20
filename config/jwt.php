@@ -103,6 +103,9 @@ return [
 
     'ttl' => env('JWT_TTL', 60),
 
+    // Remember-me token lifetime in minutes (default 30 days).
+    'remember_ttl' => env('JWT_REMEMBER_TTL', 43200),
+
     /*
     |--------------------------------------------------------------------------
     | Refresh time to live

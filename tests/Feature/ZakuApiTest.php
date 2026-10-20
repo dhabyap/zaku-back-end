@@ -70,6 +70,29 @@ class ZakuApiTest extends TestCase
             ->assertJsonPath('success', false);
     }
 
+    public function test_remember_me_issues_a_longer_lived_login_token(): void
+    {
+        config(['jwt.ttl' => 60, 'jwt.remember_ttl' => 43200]);
+        $user = User::factory()->create();
+
+        $standardToken = $this->postJson('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertOk()->json('data.token');
+
+        $rememberToken = $this->postJson('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'remember' => true,
+        ])->assertOk()->json('data.token');
+
+        $standardExp = JWTAuth::setToken($standardToken)->getPayload()->get('exp');
+        $rememberExp = JWTAuth::setToken($rememberToken)->getPayload()->get('exp');
+
+        $this->assertEqualsWithDelta(now()->timestamp + 60 * 60, $standardExp, 5);
+        $this->assertEqualsWithDelta(now()->timestamp + 43200 * 60, $rememberExp, 5);
+    }
+
     public function test_profile_budget_dashboard_history_and_chat_endpoints(): void
     {
         $user = User::factory()->create([
