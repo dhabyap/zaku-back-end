@@ -108,7 +108,7 @@ class AuthController extends Controller
      * }
      * @response 401 {
      *   "status": "error",
-     *   "message": "Invalid credentials."
+     *   "message": "Email atau kata sandi yang Anda masukkan belum benar. Periksa kembali lalu coba lagi."
      * }
      * @response 403 {
      *   "status": "error",
@@ -120,7 +120,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->string('email')->lower())->first();
 
         if (! $user || ! Hash::check($request->string('password')->toString(), $user->password)) {
-            return $this->unauthorizedResponse('Invalid credentials.');
+            return $this->unauthorizedResponse('Email atau kata sandi yang Anda masukkan belum benar. Periksa kembali lalu coba lagi.');
         }
 
         if (! $user->isVerified() || $user->verification_code) {
