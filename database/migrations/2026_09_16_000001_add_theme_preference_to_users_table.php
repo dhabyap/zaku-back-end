@@ -11,7 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('theme_preference', ['light', 'dark'])->default('light')->after('remember_token');
+            $table->enum('theme_preference', ['light', 'dark'])->default('light')->after('full_name');
         });
     }
 
