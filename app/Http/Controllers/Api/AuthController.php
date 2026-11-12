@@ -74,10 +74,13 @@ class AuthController extends Controller
             return $user->load('wallet');
         });
 
+        $token = JWTAuth::fromUser($user);
+
         return $this->successResponse([
             'user' => new UserResource($user),
-            'token' => JWTAuth::fromUser($user),
-        ], 'User registered successfully', 201);
+            'token' => $token,
+        ], 'User registered successfully', 201)
+            ->withCookie($this->createAuthCookie($token, false));
     }
 
     /**
@@ -142,10 +145,14 @@ class AuthController extends Controller
             $jwtFactory->setTTL($defaultTtl);
         }
 
+        $remember = $request->boolean('remember');
+        $ttl = $remember ? (int) config('jwt.remember_ttl', 43200) : (int) config('jwt.ttl', 60);
+
         return $this->successResponse([
             'token' => $token,
             'user' => new UserResource($user->load('wallet')),
-        ], 'Anda berhasil masuk');
+        ], 'Anda berhasil masuk')
+            ->withCookie($this->createAuthCookie($token, $remember));
     }
 
     /**
@@ -219,7 +226,8 @@ class AuthController extends Controller
         return $this->successResponse([
             'access_token' => $token,
             'refresh_token' => $token,
-        ], 'Sesi masuk berhasil diperbarui');
+        ], 'Sesi masuk berhasil diperbarui')
+            ->withCookie($this->createAuthCookie($token, false));
     }
 
     /**
@@ -240,7 +248,8 @@ class AuthController extends Controller
     {
         JWTAuth::parseToken()->invalidate();
 
-        return $this->successResponse(null, 'Anda berhasil keluar');
+        return $this->successResponse(null, 'Anda berhasil keluar')
+            ->withCookie($this->clearAuthCookie());
     }
 
     public function resetPassword(ResetPasswordRequest $request): JsonResponse
@@ -478,5 +487,29 @@ class AuthController extends Controller
         Mail::raw("Your verification code is: {$code}", function ($message) use ($user) {
             $message->to($user->email)->subject('Verify your email address');
         });
+    }
+
+    /**
+     * Create httpOnly auth cookie
+     */
+    private function createAuthCookie(string $token, bool $remember = false): \Illuminate\Cookie\CookieJar
+    {
+        $ttl = $remember ? (int) config('jwt.remember_ttl', 43200) : (int) config('jwt.ttl', 60);
+        $isProduction = app()->environment('production');
+        $domain = $isProduction ? '.abysoft.my.id' : null;
+
+        // Use 'lax' for cross-subdomain (frontend on zaku.abysoft.my.id, API on api-zaku.abysoft.my.id)
+        return cookie('zaku_token', $token, $ttl, '/', $domain, $isProduction, true, false, 'lax');
+    }
+
+    /**
+     * Clear auth cookie
+     */
+    private function clearAuthCookie(): \Illuminate\Cookie\CookieJar
+    {
+        $isProduction = app()->environment('production');
+        $domain = $isProduction ? '.abysoft.my.id' : null;
+
+        return cookie('zaku_token', '', -1, '/', $domain, $isProduction, true, false, 'lax');
     }
 }

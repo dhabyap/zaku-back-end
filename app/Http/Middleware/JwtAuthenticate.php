@@ -17,12 +17,14 @@ class JwtAuthenticate
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->bearerToken()) {
+        $token = $request->bearerToken() ?? $request->cookie('zaku_token');
+
+        if (! $token) {
             return $this->unauthorizedResponse('Silakan masuk terlebih dahulu untuk melakukan ini.');
         }
 
         try {
-            $user = JWTAuth::parseToken()->authenticate();
+            $user = JWTAuth::setToken($token)->authenticate();
         } catch (TokenExpiredException) {
             return $this->unauthorizedResponse('Sesi Anda sudah berakhir. Silakan masuk kembali.');
         } catch (TokenInvalidException) {
@@ -32,7 +34,7 @@ class JwtAuthenticate
         }
 
         if (! $user) {
-            return $this->unauthorizedResponse('Akun diketikan tidak akabilir. Silakan masuk kembali.');
+            return $this->unauthorizedResponse('Akun tidak valid. Silakan masuk kembali.');
         }
 
         auth()->setUser($user);

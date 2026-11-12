@@ -19,9 +19,15 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'https://zaku.abysoft.my.id',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+    ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '/^https?:\/\/.*\.abysoft\.my\.id$/',
+    ],
 
     'allowed_headers' => ['*'],
 
@@ -29,6 +35,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];
