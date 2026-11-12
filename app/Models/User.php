@@ -30,6 +30,8 @@ class User extends Authenticatable implements JWTSubject
         'verification_code',
         'last_login_at',
         'role',
+        'onboarding_completed',
+        'onboarding_step',
     ];
 
     /**
@@ -54,6 +56,8 @@ class User extends Authenticatable implements JWTSubject
         'is_verified' => 'boolean',
         'last_login_at' => 'datetime',
         'password_changed_at' => 'datetime',
+        'onboarding_completed' => 'boolean',
+        'onboarding_step' => 'integer',
     ];
 
     public function wallet(): HasOne

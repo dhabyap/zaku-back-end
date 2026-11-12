@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\RecurringTransactionController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\TransactionController;
@@ -51,6 +52,12 @@ Route::prefix('v1')->group(function () {
         Route::get('/user/profile', [UserController::class, 'profile']);
         Route::put('/user/profile', [UserController::class, 'updateProfile']);
         Route::put('/user/budget', [UserController::class, 'updateBudget']);
+
+        // Onboarding
+        Route::get('/onboarding/status', [OnboardingController::class, 'status']);
+        Route::post('/onboarding/step1', [OnboardingController::class, 'step1']);
+        Route::post('/onboarding/step2', [OnboardingController::class, 'step2']);
+        Route::post('/onboarding/step3', [OnboardingController::class, 'step3']);
 
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/dashboard/monthly-recap', [DashboardController::class, 'monthlyRecap']);

@@ -93,6 +93,7 @@ class AuthController extends Controller
         return $this->successResponse([
             'user' => new UserResource($user),
             'token' => $token,
+            'needs_onboarding' => ! $user->onboarding_completed,
         ], 'User registered successfully', 201)
             ->withCookie($this->createAuthCookie($token, false));
     }
@@ -202,6 +203,7 @@ class AuthController extends Controller
         return $this->successResponse([
             'token' => $token,
             'user' => new UserResource($user->load('wallet')),
+            'needs_onboarding' => ! $user->onboarding_completed,
         ], 'Anda berhasil masuk')
             ->withCookie($this->createAuthCookie($token, $remember));
     }
@@ -616,7 +618,7 @@ class AuthController extends Controller
     /**
      * Create httpOnly auth cookie
      */
-    private function createAuthCookie(string $token, bool $remember = false): \Illuminate\Cookie\CookieJar
+    private function createAuthCookie(string $token, bool $remember = false): \Symfony\Component\HttpFoundation\Cookie
     {
         $ttl = $remember ? (int) config('jwt.remember_ttl', 43200) : (int) config('jwt.ttl', 60);
         $isProduction = app()->environment('production');
