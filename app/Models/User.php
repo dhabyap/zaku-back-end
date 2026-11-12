@@ -53,6 +53,7 @@ class User extends Authenticatable implements JWTSubject
         'monthly_budget' => 'decimal:2',
         'is_verified' => 'boolean',
         'last_login_at' => 'datetime',
+        'password_changed_at' => 'datetime',
     ];
 
     public function wallet(): HasOne

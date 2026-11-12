@@ -24,7 +24,16 @@ class JwtAuthenticate
         }
 
         try {
-            $user = JWTAuth::setToken($token)->authenticate();
+            $parsedToken = JWTAuth::setToken($token);
+            $user = $parsedToken->authenticate();
+
+            // Check if password was changed after token was issued
+            if ($user && $user->password_changed_at) {
+                $tokenIssuedAt = $parsedToken->getPayload()->get('iat');
+                if ($tokenIssuedAt && $user->password_changed_at->timestamp > $tokenIssuedAt) {
+                    return $this->unauthorizedResponse('Sesi Anda telah invalid karena kata sandi baru saja diubah. Silakan masuk kembali.');
+                }
+            }
         } catch (TokenExpiredException) {
             return $this->unauthorizedResponse('Sesi Anda sudah berakhir. Silakan masuk kembali.');
         } catch (TokenInvalidException) {

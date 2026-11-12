@@ -10,6 +10,7 @@ use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\VerifyEmailRequest;
 use App\Http\Resources\UserResource;
+use App\Models\ActivityLog;
 use App\Models\User;
 use App\Models\VerificationCode;
 use App\Models\Wallet;
@@ -76,6 +77,19 @@ class AuthController extends Controller
 
         $token = JWTAuth::fromUser($user);
 
+        // Log user registration
+        ActivityLog::create([
+            'user_id' => $user->id,
+            'loggable_id' => $user->id,
+            'loggable_type' => User::class,
+            'event' => 'user_registered',
+            'old_values' => null,
+            'new_values' => ['email' => $user->email],
+            'description' => 'User mendaftar akun baru',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
         return $this->successResponse([
             'user' => new UserResource($user),
             'token' => $token,
@@ -123,10 +137,35 @@ class AuthController extends Controller
         $user = User::where('email', $request->string('email')->lower())->first();
 
         if (! $user || ! Hash::check($request->string('password')->toString(), $user->password)) {
+            // Log failed login attempt
+            if ($user) {
+                ActivityLog::create([
+                    'user_id' => $user->id,
+                    'loggable_id' => $user->id,
+                    'loggable_type' => User::class,
+                    'event' => 'login_failed',
+                    'old_values' => null,
+                    'new_values' => ['reason' => 'invalid_password'],
+                    'description' => 'Login gagal: password salah',
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            }
             return $this->unauthorizedResponse('Email atau kata sandi yang Anda masukkan belum benar. Periksa kembali lalu coba lagi.');
         }
 
         if (! $user->isVerified() || $user->verification_code) {
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'loggable_id' => $user->id,
+                'loggable_type' => User::class,
+                'event' => 'login_failed',
+                'old_values' => null,
+                'new_values' => ['reason' => 'email_not_verified'],
+                'description' => 'Login gagal: email belum diverifikasi',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
             return $this->forbiddenResponse('Email Anda belum diverifikasi. Buka email dan klik tautan verifikasi sebelum masuk.');
         }
 
@@ -146,7 +185,19 @@ class AuthController extends Controller
         }
 
         $remember = $request->boolean('remember');
-        $ttl = $remember ? (int) config('jwt.remember_ttl', 43200) : (int) config('jwt.ttl', 60);
+
+        // Log successful login
+        ActivityLog::create([
+            'user_id' => $user->id,
+            'loggable_id' => $user->id,
+            'loggable_type' => User::class,
+            'event' => 'login_success',
+            'old_values' => null,
+            'new_values' => ['remember' => $remember],
+            'description' => 'Login berhasil',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         return $this->successResponse([
             'token' => $token,
@@ -246,7 +297,24 @@ class AuthController extends Controller
      */
     public function logout(): JsonResponse
     {
+        $user = auth()->user();
+
         JWTAuth::parseToken()->invalidate();
+
+        // Log logout
+        if ($user) {
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'loggable_id' => $user->id,
+                'loggable_type' => User::class,
+                'event' => 'logout',
+                'old_values' => null,
+                'new_values' => null,
+                'description' => 'Logout berhasil',
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+        }
 
         return $this->successResponse(null, 'Anda berhasil keluar')
             ->withCookie($this->clearAuthCookie());
@@ -279,9 +347,23 @@ class AuthController extends Controller
 
         $user->forceFill([
             'password' => $request->string('password')->toString(),
+            'password_changed_at' => now(),
         ])->save();
 
         DB::table('password_reset_tokens')->where('email', $email)->delete();
+
+        // Log successful password reset
+        ActivityLog::create([
+            'user_id' => $user->id,
+            'loggable_id' => $user->id,
+            'loggable_type' => User::class,
+            'event' => 'password_reset',
+            'old_values' => null,
+            'new_values' => null,
+            'description' => 'Kata sandi berhasil direset via email',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         return $this->successResponse(null, 'Kata sandi berhasil diubah');
     }
@@ -419,14 +501,43 @@ class AuthController extends Controller
         $user = $request->user();
 
         if (! Hash::check($request->string('old_password')->toString(), $user->password)) {
+            // Log failed password change attempt
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'loggable_id' => $user->id,
+                'loggable_type' => User::class,
+                'event' => 'password_change_failed',
+                'old_values' => null,
+                'new_values' => ['reason' => 'invalid_current_password'],
+                'description' => 'Ubah kata sandi gagal: kata sandi saat ini salah',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
             return $this->errorResponse('Kata sandi saat ini belum benar. Periksa kembali, lalu coba lagi.', 422);
         }
 
         $user->forceFill([
             'password' => $request->string('new_password')->toString(),
+            'password_changed_at' => now(),
         ])->save();
 
-        return $this->successResponse(null, 'Kata sandi berhasil diubah');
+        // Invalidate current token (user will need to login again)
+        JWTAuth::parseToken()->invalidate();
+
+        // Log successful password change
+        ActivityLog::create([
+            'user_id' => $user->id,
+            'loggable_id' => $user->id,
+            'loggable_type' => User::class,
+            'event' => 'password_changed',
+            'old_values' => null,
+            'new_values' => null,
+            'description' => 'Kata sandi berhasil diubah',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return $this->successResponse(null, 'Kata sandi berhasil diubah. Silakan login kembali.');
     }
 
     /**
@@ -464,6 +575,19 @@ class AuthController extends Controller
             Mail::raw("Use this password reset token: {$token}", function ($message) use ($user) {
                 $message->to($user->email)->subject('Reset your password');
             });
+
+            // Log password reset request
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'loggable_id' => $user->id,
+                'loggable_type' => User::class,
+                'event' => 'password_reset_requested',
+                'old_values' => null,
+                'new_values' => null,
+                'description' => 'User meminta reset kata sandi',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
         }
 
         return $this->successResponse(null, 'Tautan ubah kata sandi sudah dikirim ke email Anda');
