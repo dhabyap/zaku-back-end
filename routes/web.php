@@ -22,3 +22,10 @@ Route::get('/test', function () {
         'status' => true
     ]);
 });
+
+Route::get('/logout', function () {
+    auth()->guard('web')->logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/login')->with('status', 'Logged out');
+})->name('logout');
