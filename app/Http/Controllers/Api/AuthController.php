@@ -624,8 +624,11 @@ class AuthController extends Controller
         $isProduction = app()->environment('production');
         $domain = $isProduction ? '.abysoft.my.id' : null;
 
-        // Use 'lax' for cross-subdomain (frontend on zaku.abysoft.my.id, API on api-zaku.abysoft.my.id)
-        return cookie('zaku_token', $token, $ttl, '/', $domain, $isProduction, true, false, 'lax');
+        // Use 'none' for cross-subdomain with credentials (frontend on zaku.abysoft.my.id, API on api-zaku.abysoft.my.id)
+        // SameSite=None requires Secure=true (HTTPS)
+        $sameSite = $isProduction ? 'none' : 'lax';
+
+        return cookie('zaku_token', $token, $ttl, '/', $domain, $isProduction, true, false, $sameSite);
     }
 
     /**
@@ -635,7 +638,8 @@ class AuthController extends Controller
     {
         $isProduction = app()->environment('production');
         $domain = $isProduction ? '.abysoft.my.id' : null;
+        $sameSite = $isProduction ? 'none' : 'lax';
 
-        return cookie('zaku_token', '', -1, '/', $domain, $isProduction, true, false, 'lax');
+        return cookie('zaku_token', '', -1, '/', $domain, $isProduction, true, false, $sameSite);
     }
 }
