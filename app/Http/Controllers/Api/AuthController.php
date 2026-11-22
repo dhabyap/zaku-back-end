@@ -628,7 +628,7 @@ class AuthController extends Controller
         // SameSite=None requires Secure=true (HTTPS)
         $sameSite = $isProduction ? 'none' : 'lax';
 
-        return cookie('zaku_token', $token, $ttl, '/', $domain, $isProduction, true, false, $sameSite);
+        return cookie('token', $token, $ttl, '/', $domain, $isProduction, true, false, $sameSite);
     }
 
     /**
@@ -640,6 +640,6 @@ class AuthController extends Controller
         $domain = $isProduction ? '.abysoft.my.id' : null;
         $sameSite = $isProduction ? 'none' : 'lax';
 
-        return cookie('zaku_token', '', -1, '/', $domain, $isProduction, true, false, $sameSite);
+        return cookie('token', '', -1, '/', $domain, $isProduction, true, false, $sameSite);
     }
 }
