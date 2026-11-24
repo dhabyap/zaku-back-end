@@ -376,7 +376,19 @@ class TransactionController extends Controller
         TransactionService $transactions,
     ): JsonResponse {
         $message = $request->string('message')->toString();
-        $parsed = $aiParser->parse($message);
+        try {
+            $parsed = $aiParser->parse($message);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('AI chat parsing error: '.$e->getMessage());
+            $parsed = [
+                'description' => null,
+                'amount' => null,
+                'category' => null,
+                'type' => null,
+                'response' => null,
+                'provider' => 'local',
+            ];
+        }
 
         ActivityLog::logFeature('ai_chat', [
             'provider' => $parsed['provider'] ?? 'unknown',
@@ -455,15 +467,20 @@ class TransactionController extends Controller
             ], 'Pesan berhasil diproses');
         }
 
-        $transaction = $transactions->create(
-            $request->user(),
-            $parsed['category'],
-            $parsed['type'],
-            $parsed['amount'],
-            $parsed['description'] ?? $message,
-            Transaction::SOURCE_CHAT,
-            $message,
-        );
+        try {
+            $transaction = $transactions->create(
+                $request->user(),
+                $parsed['category'],
+                $parsed['type'],
+                $parsed['amount'],
+                $parsed['description'] ?? $message,
+                Transaction::SOURCE_CHAT,
+                $message,
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('AI chat transaction creation error: '.$e->getMessage());
+            return $this->errorResponse('Gagal menyimpan transaksi ke dompet: '.$e->getMessage(), 500);
+        }
 
         return $this->successResponse([
             'response' => $parsed['response'] ?? $this->replyMessage($transaction),
