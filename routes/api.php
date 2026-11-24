@@ -62,6 +62,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index']);
         Route::get('/dashboard/monthly-recap', [DashboardController::class, 'monthlyRecap']);
         Route::get('/export/monthly-pdf', [ExportController::class, 'monthlyPdf']);
+        Route::get('/export/transactions-csv', [ExportController::class, 'transactionsCsv']);
 
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead']);
