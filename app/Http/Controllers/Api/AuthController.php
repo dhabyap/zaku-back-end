@@ -93,7 +93,7 @@ class AuthController extends Controller
         return $this->successResponse([
             'user' => new UserResource($user),
             'token' => $token,
-            'needs_onboarding' => ! $user->onboarding_completed,
+            'needs_onboarding' => false,
         ], 'User registered successfully', 201)
             ->withCookie($this->createAuthCookie($token, false));
     }
@@ -203,7 +203,7 @@ class AuthController extends Controller
         return $this->successResponse([
             'token' => $token,
             'user' => new UserResource($user->load('wallet')),
-            'needs_onboarding' => ! $user->onboarding_completed,
+            'needs_onboarding' => false,
         ], 'Anda berhasil masuk')
             ->withCookie($this->createAuthCookie($token, $remember));
     }
