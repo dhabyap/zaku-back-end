@@ -618,28 +618,31 @@ class AuthController extends Controller
     /**
      * Create httpOnly auth cookie
      */
-    private function createAuthCookie(string $token, bool $remember = false): \Symfony\Component\HttpFoundation\Cookie
+    private function createAuthCookie(string $token, bool $remember = false, ?Request $request = null): \Symfony\Component\HttpFoundation\Cookie
     {
+        $req = $request ?? request();
         $ttl = $remember ? (int) config('jwt.remember_ttl', 43200) : (int) config('jwt.ttl', 60);
-        $isProduction = app()->environment('production');
-        $domain = $isProduction ? '.abysoft.my.id' : null;
+        $isSecure = $req->isSecure() || $req->header('X-Forwarded-Proto') === 'https' || app()->environment('production');
+        $host = $req->getHost();
+        $isProductionDomain = str_ends_with($host, 'abysoft.my.id');
+        $domain = $isProductionDomain ? '.abysoft.my.id' : null;
+        $sameSite = $isProductionDomain ? 'none' : 'lax';
 
-        // Use 'none' for cross-subdomain with credentials (frontend on zaku.abysoft.my.id, API on api-zaku.abysoft.my.id)
-        // SameSite=None requires Secure=true (HTTPS)
-        $sameSite = $isProduction ? 'none' : 'lax';
-
-        return cookie('token', $token, $ttl, '/', $domain, $isProduction, true, false, $sameSite);
+        return cookie('token', $token, $ttl, '/', $domain, $isSecure, true, false, $sameSite);
     }
 
     /**
      * Clear auth cookie
      */
-    private function clearAuthCookie(): \Illuminate\Cookie\CookieJar
+    private function clearAuthCookie(?Request $request = null): \Illuminate\Cookie\CookieJar
     {
-        $isProduction = app()->environment('production');
-        $domain = $isProduction ? '.abysoft.my.id' : null;
-        $sameSite = $isProduction ? 'none' : 'lax';
+        $req = $request ?? request();
+        $isSecure = $req->isSecure() || $req->header('X-Forwarded-Proto') === 'https' || app()->environment('production');
+        $host = $req->getHost();
+        $isProductionDomain = str_ends_with($host, 'abysoft.my.id');
+        $domain = $isProductionDomain ? '.abysoft.my.id' : null;
+        $sameSite = $isProductionDomain ? 'none' : 'lax';
 
-        return cookie('token', '', -1, '/', $domain, $isProduction, true, false, $sameSite);
+        return cookie('token', '', -1, '/', $domain, $isSecure, true, false, $sameSite);
     }
 }

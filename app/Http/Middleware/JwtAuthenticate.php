@@ -17,7 +17,7 @@ class JwtAuthenticate
 
     public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->bearerToken() ?? $request->cookie('zaku_token');
+        $token = $request->bearerToken() ?? $request->cookie('token') ?? $request->cookie('zaku_token');
 
         if (! $token) {
             return $this->unauthorizedResponse('Silakan masuk terlebih dahulu untuk melakukan ini.');
