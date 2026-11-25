@@ -61,7 +61,7 @@ class SecurityHeaders
 
         $directives = [
             'default-src' => ["'self'"],
-            'script-src' => ["'self'"],
+            'script-src' => ["'self'", "'unsafe-eval'"],
             'style-src' => ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
             'font-src' => ["'self'", 'https://fonts.gstatic.com', 'data:'],
             'img-src' => ["'self'", 'data:', 'blob:'],
@@ -81,7 +81,6 @@ class SecurityHeaders
         if ($env === 'local' || $env === 'development') {
             $directives['connect-src'][] = 'ws://localhost:*';
             $directives['script-src'][] = "'unsafe-inline'";
-            $directives['script-src'][] = "'unsafe-eval'";
             $directives['script-src'][] = 'https://vitejs.dev';
             $directives['script-src'][] = 'https://cdn.jsdelivr.net';
         }
