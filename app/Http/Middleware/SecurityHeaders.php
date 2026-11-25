@@ -81,6 +81,7 @@ class SecurityHeaders
         if ($env === 'local' || $env === 'development') {
             $directives['connect-src'][] = 'ws://localhost:*';
             $directives['script-src'][] = "'unsafe-inline'";
+            $directives['script-src'][] = "'unsafe-eval'";
             $directives['script-src'][] = 'https://vitejs.dev';
             $directives['script-src'][] = 'https://cdn.jsdelivr.net';
         }
